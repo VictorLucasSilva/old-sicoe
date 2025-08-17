@@ -1,0 +1,343 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estabelecimentos</title>
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-div-all {
+            background-color: #FFF;
+            transition: .4s;
+            cursor: pointer;
+            color: black;
+            height: 100%;
+            border-radius: .25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 15px;
+            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+        }
+
+        .table-div-all .table {
+            font-size: 1.2rem;
+            width: 100%;
+            table-layout: fixed;
+            text-align: center;
+        }
+
+        .table-div-all .table,
+        .table-div-all .table td {
+            word-wrap: break-word;
+            vertical-align: middle;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+            <aside id="sidebar">
+                <div class="d-flex">
+                    <button class="toggle-btn" type="button">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="sidebar-logo">
+                        <a href="{% url 'home' %}"></a>
+                    </div>
+                </div>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-item">
+                        <a href="{% url 'home' %}" class="sidebar-link">
+                            <i class="bi bi-house"></i>
+                            <span><strong>Home</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span><strong>Anexos</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
+                            <i class="bi bi-plus-square"></i>
+                            <span><strong>Cadastro</strong></span>
+                        </a>
+                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
+                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
+                                     Relacionamento
+                                </a>
+                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
+                                    </li>
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
+                            <i class="bi bi-person-lock"></i>
+                            <span><strong>Administração</strong></span>
+                        </a>
+                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </aside>
+        <div class="main">
+            <nav class="navbar navbar-expand px-4 py-2">
+                <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+                    <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
+                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                </a>
+            </nav>
+            <main class="content px-3 py-4">
+                {% if messages %}
+                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
+                    {% for message in messages %}
+                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                <div class="container-fluid">
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
+                                <div class="breadcrumb-div py-3 border-1">
+                                    <ol class="breadcrumb my-1 mx-2 px-3">
+                                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Emails</li>
+                                    </ol>
+                                    <h1 class="fw-bold fs-2 mx-5 mt-3">Emails</h1>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-12 col-md-12">
+                                <div class="table-div-all py-3 px-3 border-1">
+                                      <div class="my-3 mx-3">
+                                        Exibindo <b id="count-start">{{ page_obj.start_index }}</b>-<b id="count-end">{{ page_obj.end_index }}</b> de <b id="count-total">{{ page_obj.paginator.count }}</b> itens.
+                                      </div>  
+                                      <hr class="mx-1 mb-4">
+                                    <div class="table-responsive">
+                                      <table class="table table-striped table-hover align-middle small">
+                                        <thead>
+                                          <tr>
+                                            <th width="150px"><a >Código</a></th>
+                                            <th width="250px"><a >Assunto</a></th>
+                                            <th width="300px"><a >Documento</a></th>
+                                            <th width="250px"><a >Para</a></th>
+                                            <th width="200px"><a >Estabelecimento</a></th>
+                                            <th width="180px"><a >Data de Envio</a></th>
+                                          </tr>
+                                          <tr class="filters">
+                                            <td><input id="cod-filter" type="text" class="form-control form-control-sm" name="" /></td>
+                                            <td><input id="subject-filter" type="text" class="form-control form-control-sm" name="" /></td>
+                                            <td><input id="doc-filter" type="text" class="form-control form-control-sm" name="" /></td>
+                                            <td><input id="email-filter" type="text" class="form-control form-control-sm" name="" /></td>
+                                            <td><input id="center-filter" type="text" class="form-control form-control-sm" name="" /></td>
+                                            <td><input id="data-shipping-filter" type="text" class="form-control form-control-sm" name="" /></td>
+                                          </tr>
+                                        </thead>
+                                        <tbody id="email-body">
+                                          {% for email in email_l %}
+                                            <tr>
+                                              <td>{{ email.em_id }}</td>
+                                              <td>{{ email.em_subject }}</td>
+                                              <td>{{ email.em_doc }}</td>
+                                              <td>{{ email.em_email }}</td>
+                                              <td>{{ email.em_center }}</td>
+                                              <td>{{ email.em_data_shipping }}</td>
+                                            </tr>
+                                          {% empty %}
+                                            <tr>
+                                              <td colspan="6">Nenhum item encontrado.</td>
+                                            </tr>
+                                          {% endfor %}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                    <nav aria-label="Page navigation example" class="mt-3">
+                                        <ul class="pagination justify-content-center" id="pagination">
+                                            {% if page_obj.has_previous %}
+                                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                                            {% else %}
+                                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                            {% endif %}
+                                            {% for num in page_obj.paginator.page_range %}
+                                            {% if page_obj.number == num %}
+                                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                            {% else %}
+                                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                            {% endif %}
+                                            {% endfor %}
+                                            {% if page_obj.has_next %}
+                                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                                            {% else %}
+                                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer class="footer d-flex justify-content-center align-items-center">
+                <div class="container-fluid">
+                    <div class="row text-body-secondary align-items-center justify-content-center">
+                        <div class="col-6 text-center pt-2">
+                            <a class="text-body-secondary" href="#">
+                                <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+            const msgContainer = document.getElementById('msg-container');
+            if (msgContainer) {
+                setTimeout(() => {
+                [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                    bsAlert.close();
+                });
+                }, 8000);
+            }
+            });
+        </script>
+    <script>
+    $(document).ready(function () {
+      let ajaxEnabled = false;
+
+      function loadEmail(page = 1) {
+        ajaxEnabled = true;
+
+        const data = {
+          id: $('#cod-filter').val(),
+          subject: $('#subject-filter').val(),
+          doc: $('#doc-filter').val(),
+          email: $('#email-filter').val(),
+          center: $('#center-filter').val(),
+          data_shipping: $('#data-shipping-filter').val(),
+          pare: page 
+          };
+
+        $.ajax({
+          url: "{% url 'email_list' %}",
+          data: data,
+          dataType: 'json',
+          success: function (data) {
+            let tbody = $('#email-body');
+            tbody.empty();
+
+            if (data.results.length > 0) {
+              $.each(data.results, function(index, email) {
+                tbody.append(`
+                  <tr>
+                    <td>${email.em_id}</td>
+                    <td>${email.em_subject}</td>
+                    <td>${email.em_doc}</td>
+                    <td>${email.em_email}</td>
+                    <td>${email.em_center}</td>
+                    <td>${email.em_data_shipping}</td>
+                  </tr>`);
+              });
+            } else {
+              tbody.append('<tr><td colspan="9">Nenhum email encontrado.</td></tr>');
+            }
+
+            $('#count-start').text(data.start_index);
+            $('#count-end').text(data.end_index);
+            $('#count-total').text(data.count);
+
+            let pagination = $('#pagination');
+            pagination.empty();
+
+            if (data.current_page > 1) {
+              pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${data.current_page - 1}">&laquo;</a></li>`);
+            } else {
+              pagination.append('<li class="page-item disabled"><span class="page-link">&laquo;</span></li>');
+            }
+
+            for (let i = 1; i <= data.num_pages; i++) {
+              if (i === data.current_page) {
+                pagination.append(`<li class="page-item active"><span class="page-link">${i}</span></li>`);
+              } else {
+                pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`);
+              }
+            }
+
+            if (data.current_page < data.num_pages) {
+              pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${data.current_page + 1}">&raquo;</a></li>`);
+            } else {
+              pagination.append('<li class="page-item disabled"><span class="page-link">&raquo;</span></li>');
+            }
+          }
+        });
+      }
+
+
+      $('input[type="text"]').on('input', function () {
+        loadEmail();
+      });
+
+      $('.pagination').on('click', 'a.page-link', function (e) {
+        if (ajaxEnabled) {
+          e.preventDefault();
+          const page = $(this).data('page');
+          if (page) loadEmail(page);
+        }
+      });
+    });
+    </script>
+  </body>
+</html>
+

@@ -1,0 +1,399 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estabelecimentos</title>
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+
+        .create-div-all {
+            background-color: #FFF;
+            transition: .4s;
+            cursor: pointer;
+            color: black;
+            height: 100%;
+            border-radius: .25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 15px;
+            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+        }
+
+        .create-div-all .table {
+            font-size: 1.2rem;
+            width: 100%;
+            table-layout: fixed;
+            text-align: center;
+        }
+
+        .create-div-all .table th,
+        .create-div-all .table td {
+            word-wrap: break-word;
+            vertical-align: middle;
+            font-size: 0.85rem;
+        }
+        .is-valid {
+            border: 2px solid #28a745;
+        }
+        .is-invalid {
+            border: 2px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+            <aside id="sidebar">
+                <div class="d-flex">
+                    <button class="toggle-btn" type="button">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="sidebar-logo">
+                        <a href="{% url 'home' %}"></a>
+                    </div>
+                </div>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-item">
+                        <a href="{% url 'home' %}" class="sidebar-link">
+                            <i class="bi bi-house"></i>
+                            <span><strong>Home</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span><strong>Anexos</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
+                            <i class="bi bi-plus-square"></i>
+                            <span><strong>Cadastro</strong></span>
+                        </a>
+                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
+                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
+                                     Relacionamento
+                                </a>
+                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
+                                    </li>
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
+                            <i class="bi bi-person-lock"></i>
+                            <span><strong>Administração</strong></span>
+                        </a>
+                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </aside>
+        <div class="main">
+            <nav class="navbar navbar-expand px-4 py-2">
+                <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+                    <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
+                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                </a>
+            </nav>
+              <main class="content px-3 py-4">
+                {% if messages %}
+                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
+                    {% for message in messages %}
+                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                  <div class="container-fluid">
+                      <div class="mb-3">
+                          <div class="row">
+                              <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
+                                  <div class="breadcrumb-div py-3 border-1">
+                                      <ol class="breadcrumb my-1 mx-2 px-3">
+                                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
+                                        <li class="breadcrumb-item"><a href="{% url 'center_user_list' %}">Relação - Estabelecimento e Usuário</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Cadastro</li>
+                                      </ol>
+                                      <h1 class="fw-bold fs-2 mx-5 mt-3">Cadastro de Relação</h1>
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="row">
+                            <div class="col-12 col-lg-12 col-md-12">
+                              <div class="create-div-all py-5 px-5 border-1">
+                                <form method="POST" id="formCNPJCreate">
+                                  {% csrf_token %}
+
+                                  <div class="mb-4">
+                                    <label for="user" class="mb-2 form-label"><strong>Colaborador:</strong></label>
+                                    <select name="user" id="user" class="form-control" required>
+                                      <option value="">Todos(as)</option>
+                                      {% for user in users %}
+                                        <option value="{{ user.u_login }}" {% if request.POST.user == user.u_login %}selected{% endif %}>
+                                          {{ user.u_login }}
+                                        </option>
+                                      {% endfor %}
+                                    </select>
+                                  </div>
+
+                                  <div class="mb-4">
+                                    <label for="region" class="mb-2 form-label"><strong>Região:</strong></label>
+                                    <select name="region" id="region" class="form-control" disabled>
+                                      <option value="">Todas</option>
+                                      {% for r in regions %}
+                                        <option value="{{ r }}" {% if request.POST.region == r %}selected{% endif %}>{{ r }}</option>
+                                      {% endfor %}
+                                    </select>
+                                  </div>
+
+                                  <div class="mb-4">
+                                    <label for="state" class="mb-2 form-label"><strong>Estado:</strong></label>
+                                    <select name="state" id="state" class="form-control" disabled>
+                                      <option value="">Todos</option>
+                                      {% for s in states %}
+                                        <option value="{{ s }}" {% if request.POST.state == s %}selected{% endif %}>{{ s }}</option>
+                                      {% endfor %}
+                                    </select>
+                                  </div>
+
+                                  <div class="mb-5">
+                                    <label for="center" class="mb-2 form-label"><strong>Estabelecimento:</strong></label>
+                                    <select name="center" id="center" class="form-control" disabled>
+                                      <option value="">Todos(as)</option>
+                                      {% for establishment in establishments %}
+                                        <option value="{{ establishment.est_center }}" {% if request.POST.center == establishment.est_center %}selected{% endif %}>
+                                          {{ establishment.est_center }}
+                                        </option>
+                                      {% endfor %}
+                                    </select>
+                                  </div>
+
+                                  <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
+                                  <a href="{% url 'center_user_list' %}" class="btn btn-secondary">Voltar</a>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+                      </div>
+                  </div>
+              </main>
+              <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1" aria-labelledby="modalConfirmarSalvarLabel" aria-hidden="true">
+                <div class="modal-dialog modal-md mt-5 d-flex justify-content-center">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="modalConfirmarSalvarLabel">Confirmar cadastro</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                      Deseja realmente salvar essa relação de Estabelecimento/Usuário?
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                      <button type="button" id="btnConfirmarSalvar" class="btn btn-primary">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinnerSalvar"></span>
+                        <span id="btnTextSalvar">Confirmar</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+                <footer class="footer d-flex justify-content-center align-items-center">
+                    <div class="container-fluid">
+                        <div class="row text-body-secondary align-items-center justify-content-center">
+                            <div class="col-6 text-center pt-2">
+                                <a class="text-body-secondary" href="#">
+                                    <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
+        <script src="{% static 'js/script.js' %}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              const form = document.getElementById('formCNPJCreate');
+              const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
+              const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+              const spinner = document.getElementById('spinnerSalvar');
+              const btnText = document.getElementById('btnTextSalvar');
+
+              const user = document.getElementById('user');
+              const region = document.getElementById('region');
+              const state = document.getElementById('state');
+              const center = document.getElementById('center');
+
+              const campos = [user, region, state, center];
+
+              form.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') e.preventDefault();
+              });
+
+              campos.forEach(campo => {
+                campo.addEventListener('input', () => validarCampo(campo));
+                campo.addEventListener('change', () => validarCampo(campo));
+              });
+
+              function validarCampo(campo) {
+                const isValid = campo.value && campo.value.trim() !== "";
+                if (isValid) {
+                  campo.classList.remove('is-invalid');
+                  campo.classList.add('is-valid');
+                } else {
+                  campo.classList.add('is-invalid');
+                  campo.classList.remove('is-valid');
+                }
+                return isValid;
+              }
+
+              btnAbrirModal.addEventListener('click', function () {
+                const userValid = validarCampo(user);
+                const regionValid = region.value.trim() !== "";
+                const stateValid = state.value.trim() !== "";
+                const centerValid = center.value.trim() !== "";
+
+                const preenchidos = [regionValid, stateValid, centerValid].filter(Boolean).length;
+
+                // Reset dos visuais
+                [region, state, center].forEach(field => {
+                  field.classList.remove('is-invalid', 'is-valid');
+                });
+
+                let camposValidos = true;
+
+                if (preenchidos !== 1) {
+                  [region, state, center].forEach(field => {
+                    if (field.value.trim()) {
+                      field.classList.add('is-valid');
+                    } else {
+                      field.classList.add('is-invalid');
+                    }
+                  });
+                  camposValidos = false;
+                }
+
+                if (!userValid) camposValidos = false;
+
+                if (camposValidos) {
+                  const modal = new bootstrap.Modal(document.getElementById('modalConfirmarSalvar'));
+                  modal.show();
+                }
+              });
+
+              btnConfirmarSalvar.addEventListener('click', function () {
+                btnConfirmarSalvar.disabled = true;
+                btnText.classList.add('d-none');
+                spinner.classList.remove('d-none');
+                form.submit();
+              });
+            });
+
+        </script>
+        <script>
+          const userProfiles = {{ user_profiles|safe }};
+
+          document.addEventListener("DOMContentLoaded", function () {
+            const userSelect = document.getElementById('user');
+            const regionSelect = document.getElementById('region');
+            const stateSelect = document.getElementById('state');
+            const centerSelect = document.getElementById('center');
+
+            function disableAllFields() {
+              regionSelect.disabled = true;
+              stateSelect.disabled = true;
+              centerSelect.disabled = true;
+            }
+
+            function setFieldsByProfile(profile) {
+              regionSelect.value = "";
+              stateSelect.value = "";
+              centerSelect.value = "";
+
+              if (profile === "Gerente Regional") {
+                regionSelect.disabled = false;
+                stateSelect.disabled = false;
+                centerSelect.disabled = true;
+              } else if (profile === "Usuário") {
+                regionSelect.disabled = true;
+                stateSelect.disabled = true;
+                centerSelect.disabled = false;
+              } else {
+                disableAllFields();
+              }
+            }
+
+            regionSelect.addEventListener('change', function () {
+              if (this.value) {
+                stateSelect.disabled = true;
+              } else {
+                stateSelect.disabled = false;
+              }
+            });
+
+            stateSelect.addEventListener('change', function () {
+              if (this.value) {
+                regionSelect.disabled = true;
+              } else {
+                regionSelect.disabled = false;
+              }
+            });
+
+            userSelect.addEventListener('change', function () {
+              const selectedUser = this.value;
+              if (selectedUser && userProfiles[selectedUser]) {
+                setFieldsByProfile(userProfiles[selectedUser]);
+              } else {
+                disableAllFields();
+              }
+            });
+
+            if (userSelect.value && userProfiles[userSelect.value]) {
+              setFieldsByProfile(userProfiles[userSelect.value]);
+            } else {
+              disableAllFields();
+            }
+          });
+        </script>
+    </body>
+</html>
+

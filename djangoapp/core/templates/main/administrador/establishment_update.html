@@ -1,0 +1,377 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estabelecimentos</title>
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .update-div-establishment {
+            background-color: #FFF;
+            transition: .4s;
+            cursor: pointer;
+            color: black;
+            height: 100%;
+            border-radius: .25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 15px;
+            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+        }
+
+        .update-div-establishment .table {
+            font-size: 0.875rem;
+            width: 100%;
+            table-layout: fixed;
+            text-align: center;
+        }
+
+        .update-div-establishment .table th,
+        .update-div-establishment .table td {
+            word-wrap: break-word;
+            vertical-align: middle;
+            font-size: 1rem;
+        }
+
+        .is-invalid {
+            border-color: #dc3545;
+        }
+
+        .is-invalid::placeholder {
+            color: #dc3545 ;
+        }
+
+        .is-invalid.form-control {
+            color: #dc3545;
+        }
+        .is-valid {
+            border-color: #00841fff;
+        }
+
+        .is-valid::placeholder {
+            color: #00841fff; 
+        }
+
+        .is-valid.form-control {
+            color: #00841fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <aside id="sidebar">
+            <div class="d-flex">
+                <button class="toggle-btn" type="button">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="sidebar-logo">
+                    <a href="{% url 'home' %}"></a>
+                </div>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-item">
+                    <a href="{% url 'home' %}" class="sidebar-link">
+                        <i class="bi bi-house"></i>
+                        <span><strong>Home</strong></span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{% url 'attachment_list' %}" class="sidebar-link">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span><strong>Anexos</strong></span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                        data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
+                        <i class="bi bi-plus-square"></i>
+                        <span><strong>Cadastro</strong></span>
+                    </a>
+                    <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                        <li class="sidebar-item">
+                            <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
+                                data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
+                                 Relacionamento
+                            </a>
+                            <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
+                                <li class="sidebar-item">
+                                    <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                        data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
+                        <i class="bi bi-person-lock"></i>
+                        <span><strong>Administração</strong></span>
+                    </a>
+                    <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                        <li class="sidebar-item">
+                            <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <div class="main">
+            <nav class="navbar navbar-expand px-4 py-2">
+                <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+                    <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
+                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                </a>
+            </nav>
+
+            <main class="content px-3 py-4">
+                {% if messages %}
+                <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3"
+                    style="z-index: 1080; width: fit-content; max-width: 90%;">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="container-fluid">
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-12 pb-4 mt-2">
+                                <div class="breadcrumb-div py-3 border-1">
+                                    <ol class="breadcrumb my-1 mx-2 px-3">
+                                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
+                                        <li class="breadcrumb-item"><a href="{% url 'establishment_list' %}">Estabelecimentos</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Alteração Estabelecimento</li>
+                                    </ol>
+                                    <h1 class="fw-bold fs-2 mx-5 mt-3">Alteração de Estabelecimento</h1>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="update-div-establishment py-5 px-5 border-1">
+                                    <form method="POST" id="formEstablishment">
+                                        {% csrf_token %}
+
+                                        <div class="mb-4">
+                                            <label class="mb-2"><strong>Região:</strong></label>
+                                            <input type="text" class="form-control" value="{{ establishment.est_region }}" disabled>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="mb-2"><strong>Estado:</strong></label>
+                                            <input type="text" class="form-control" value="{{ establishment.est_state }}" disabled>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="mb-2"><strong>Cidade:</strong></label>
+                                            <input type="text" class="form-control" value="{{ establishment.est_city }}" disabled>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="mb-2"><strong>Estabelecimento:</strong></label>
+                                            <input type="text" class="form-control" value="{{ establishment.est_center }}" disabled>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="mb-2"><strong>Endereço:</strong></label>
+                                            <input type="text" class="form-control" value="{{ establishment.est_address }}" disabled>
+                                        </div>
+
+                                <div class="mb-4">
+                                    <label class="mb-2"><strong>Unidade Gestora (do Imóvel):</strong></label>
+                                    <input type="text" name="est_manage" class="form-control {% if form.est_manage.errors and not form.est_manage.is_bound %}is-invalid{% endif %}"
+                                        placeholder="Digite a Área Gestora"
+                                        value="{{ form.est_manage.value|default_if_none:'' }}" id="est_manage">
+                                    
+                                    {% if form.est_manage.errors and form.est_manage.is_bound %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.est_manage.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div id="est_manage_error" class="text-danger small mt-1"></div>
+                                </div>
+
+                                <div class="mb-5">
+                                    <label class="mb-2"><strong>Propriedade:</strong></label>
+                                    <select name="est_property" class="form-control {% if form.est_property.errors and not form.est_property.is_bound %}is-invalid{% endif %}" required id="est_property">
+                                        <option value="-" {% if form.est_property.value == "-" %}selected{% endif %}>-</option>
+                                        <option value="Próprio" {% if form.est_property.value == "Próprio" %}selected{% endif %}>Próprio</option>
+                                        <option value="Alugado" {% if form.est_property.value == "Alugado" %}selected{% endif %}>Alugado</option>
+                                        <option value="Cedido" {% if form.est_property.value == "Cedido" %}selected{% endif %}>Cedido</option>
+                                    </select>
+                                    {% if form.est_property.errors and form.est_property.is_bound %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.est_property.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div id="est_property_error" class="text-danger small mt-1"></div>
+                                </div>
+
+                                        <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
+                                        <a href="{% url 'establishment_list' %}" class="btn btn-secondary">Voltar</a>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1" aria-labelledby="modalConfirmarSalvarLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalConfirmarSalvarLabel">Confirmar Alteração</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body">
+                            Tem certeza que deseja salvar as alterações deste estabelecimento?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-danger" id="btnConfirmarSalvar">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer d-flex justify-content-center align-items-center">
+                <div class="container-fluid">
+                    <div class="row text-body-secondary align-items-center justify-content-center">
+                        <div class="col-6 text-center pt-2">
+                            <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const msgContainer = document.getElementById('msg-container');
+        if (msgContainer) {
+            setTimeout(() => {
+                [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                    bsAlert.close();
+                });
+            }, 8000);
+        }
+
+        const form = document.getElementById('formEstablishment');
+        form.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+            }
+        });
+
+        const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
+        const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+
+        btnAbrirModal.addEventListener('click', function () {
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmarSalvar'));
+            modal.show();
+        });
+
+        btnConfirmarSalvar.addEventListener('click', function () {
+            form.submit();
+        });
+
+        const estManageField = document.getElementById('est_manage');
+        const estPropertyField = document.getElementById('est_property');
+        const estManageError = document.getElementById('est_manage_error');
+        const estPropertyError = document.getElementById('est_property_error');
+
+        function validateEstManage(value) {
+            let errorMessage = '';
+            if (!value.trim()) {
+                errorMessage = 'Se deseja deixar o campo sem valor coloque traço (-)';
+            } else if (value.length === 0) {
+                errorMessage = 'Se deseja deixar o campo sem valor coloque traço (-)';
+            } else if (!/^[A-Za-zÀ-ÖØ-öø-ÿ\s-]+$/.test(value)) {
+                errorMessage = 'O campo Área Gestora não pode conter números ou caracteres especiais.';
+            }
+            return errorMessage;
+        }
+
+        function validateEstProperty(value) {
+            let errorMessage = '';
+            if (!value.trim()) {
+                errorMessage = 'O campo Propriedade é obrigatório.';
+            } else if (value.length === 0) {
+                errorMessage = 'O campo Propriedade não pode ser vazio.';
+            } else if (!/^[A-Za-zÀ-ÖØ-öø-ÿ\s-]+$/.test(value)) {
+                errorMessage = 'O campo Propriedade não pode conter números ou caracteres especiais.';
+            }
+            return errorMessage;
+        }
+
+        estManageField.addEventListener('input', function () {
+            const errorMessage = validateEstManage(this.value);
+            if (errorMessage) {
+                estManageError.textContent = errorMessage;
+                estManageField.classList.add('is-invalid');
+                estManageField.classList.remove('is-valid');
+            } else {
+                estManageError.textContent = '';
+                estManageField.classList.remove('is-invalid');
+                estManageField.classList.add('is-valid');
+            }
+        });
+
+        estPropertyField.addEventListener('change', function () {
+            const errorMessage = validateEstProperty(this.value);
+            if (errorMessage) {
+                estPropertyError.textContent = errorMessage;
+                estPropertyField.classList.add('is-invalid');
+                estPropertyField.classList.remove('is-valid');
+            } else {
+                estPropertyError.textContent = '';
+                estPropertyField.classList.remove('is-invalid');
+                estPropertyField.classList.add('is-valid');
+            }
+        });
+    });
+    </script>
+    </body>
+</html>

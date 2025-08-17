@@ -1,0 +1,108 @@
+/* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.nav-bar-s {
+    background-color: rgb(24, 85, 226);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    height: 40px;
+}
+
+.main-s {
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.control-sections-s {
+    background-color: white;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    margin: 14px 10px 12px 10px;
+    border-radius: 3px;
+}
+
+.section-content-1 {
+    background-color: white;
+    margin: 0px 10px 0 10px;
+    border-radius: 2px;
+}
+
+.section-1-title {
+    margin: 25px 30px;
+}
+
+.section-content-2 {
+    background-color: white;
+    margin: 0 10px 10px 10px;
+}
+
+.section-2-button {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 5px 30px 5px 30px;
+}
+
+.section-2-button .btn-primary {
+    background-color: #FCFC30;
+    color: #465EFF;
+    font-weight: bold;
+    border: none;
+    margin-right: 1px;
+}
+
+.section-2-button .btn-primary:first-child {
+    margin-left: 0; 
+}
+
+.section-2-button .btn-primary:nth-child(2),
+.section-2-button .btn-primary:nth-child(3) {
+    margin-left: auto;
+}
+
+.section-2-items {
+    padding: 5px 0 0 30px;
+}
+
+.section-2-table {
+    padding: 20px 30px 0 30px;
+    max-height: 500px;
+}
+
+.footer-s {
+    background-color: #465EFF;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    height: 30px;
+}
+
+hr {
+    color: #646464;
+}
+
+.section-2-form {
+    padding: 20px 30px 0 30px;
+    min-height: 500px;
+    max-height: 100%;
+}
+
+.histoconfer {
+    background-color: #465EFF;
+    color: #FCFC30;
+}
+/*

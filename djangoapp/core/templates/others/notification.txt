@@ -1,0 +1,7 @@
+Olá {{ first_name }},
+
+Este é um aviso automático para informar que o documento {{ document }} do(a) {{ center }} está pendente de regularização.
+
+Por favor, acesse o {{ address_url }} para verificar os detalhes e manter seus documentos em dia.
+
+Atenciosamente.

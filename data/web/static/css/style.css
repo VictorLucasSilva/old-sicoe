@@ -1,0 +1,314 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+::after,
+::before {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+}
+
+li {
+    list-style: none;
+}
+
+body {
+    font-family: "Source Sans Pro", "-apple-system", "BlinkMacSystemFont", "Segoe UI","Roboto","Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+}
+
+.wrapper {
+    display: flex;
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    transition: all 0.35s ease-in-out;
+    background-color: #f0f0f0;
+    min-width: 0;
+    flex-grow: 1;
+}
+
+#sidebar {
+    width: 75px;
+    min-width: 75px;
+    z-index: 1000;
+    transition: all .25s ease-in-out;
+    background-color: #465EFF;
+    display: flex;
+    flex-direction: column;
+    box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+}
+
+.line-table {
+    color: #a3a3a3;
+}
+
+#sidebar.expand {
+    width: 260px;
+    min-width: 260px;
+}
+
+.toggle-btn {
+    background-color: transparent;
+    cursor: pointer;
+    border: 0;
+    padding: 1rem 1.5rem 0.68rem 1.5rem;
+}
+
+.toggle-btn i {
+    font-size: 1.7rem;
+    color: #FFF;
+}
+
+.sidebar-logo {
+    margin: auto 0;
+}
+
+.sidebar-logo a {
+    color: #FFF;
+    font-size: 1.50rem;
+    font-weight: 600;
+}
+
+#sidebar:not(.expand) .sidebar-logo,
+#sidebar:not(.expand) a.sidebar-link span {
+    display: none;
+}
+
+#sidebar.expand .sidebar-logo,
+#sidebar.expand a.sidebar-link span {
+    animation: fadeIn .25s ease;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.sidebar-nav {
+    padding: 2.3rem 0;
+    flex: 1 1 auto;
+}
+
+a.sidebar-link {
+    padding: .536rem 1.418rem;
+    color: #FFF;
+    display: block;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    border-left: 3px solid transparent;
+}
+
+.sidebar-link i,
+.dropdown-item i {
+    font-size: 1.5rem;
+    margin-right: .75rem;
+}
+
+a.sidebar-link:hover {
+    background-color: #465EFF;
+    border-left: 4px solid #FCFC30;
+}
+
+.sidebar-item {
+    position: relative;
+}
+
+#sidebar:not(.expand) .sidebar-item .sidebar-dropdown {
+    position: absolute;
+    top: 0;
+    left: 70px;
+    background-color: #5a70ff;
+    padding: 0;
+    min-width: 15rem;
+    display: none;
+}
+
+#sidebar:not(.expand) .sidebar-item:hover .has-dropdown+.sidebar-dropdown {
+    display: block;
+    max-height: 15em;
+    width: 100%;
+    opacity: 1;
+}
+
+#sidebar.expand .sidebar-link[data-bs-toggle="collapse"]::after {
+    border: solid;
+    border-width: 0 .075rem .075rem 0;
+    content: "";
+    display: inline-block;
+    padding: 2px;
+    position: absolute;
+    right: 1.5rem;
+    top: 1.4rem;
+    transform: rotate(-135deg);
+    transition: all .2s ease-out;
+}
+
+#sidebar.expand .sidebar-link[data-bs-toggle="collapse"].collapsed::after {
+    transform: rotate(45deg);
+    transition: all .2s ease-out;
+}
+.main-s {
+    background-color: #FFF;
+    transition: .4s;
+    cursor: pointer;
+    color: black;
+    box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+    border-radius: .25rem;
+    display: flex;               
+    flex-direction: column;     
+    justify-content: flex-start;         
+    height: 100%;              
+    text-align: center;      
+}
+
+.div-titulo img {
+  width: 1.7rem;
+  height: 2.2rem;
+}
+
+.last-att {
+    background-color: #FFF;
+    transition: .4s;
+    cursor: pointer;
+    color: black;
+    box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+    border-radius: .25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.main-s .titulo {
+    font-size: 1.5rem;           
+    font-weight: bold;          
+    margin-bottom: 0.2rem; 
+    padding: 1rem 1rem;       
+    box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+    border-radius: .25rem;
+}
+
+.control-sections-s {
+    flex-grow: 1;              
+    display: flex;             
+    flex-direction: column;     
+    justify-content: flex-start;
+}
+
+nav img {
+  width: 1.7rem;
+  height: 2.2rem;
+}
+
+.navbar {
+    background-color: #FCFC30;
+    box-shadow: 0 0 1rem 0 rgb(153, 153, 153);
+}
+
+.navbar-expand .navbar-collapse {
+    min-width: 200px;
+}
+
+.card{
+    background-color: #FFF;
+    transition: .4s;
+    cursor: pointer;
+    color: black;
+    box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+    height: 8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: .25rem;
+}
+/*
+.card:hover{
+    color: #465EFF;
+    transform: translateY(-10.5px);
+}
+*/
+.breadcrumb-div {
+    background-color: #FFF;
+    transition: .4s;
+    cursor: pointer;
+    color: black;
+    box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+    border-radius: .25rem;
+    height: 8rem; 
+    justify-content: space-between;
+}
+
+.table-div {
+    background-color: #FFF;
+    transition: .4s;
+    color: black;
+    box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+    height: 8rem;
+    border-radius: .25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.table {
+    font-size: 0.875rem;
+    width: 100%;
+    table-layout: fixed;
+    overflow-x: auto;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table th, .table td {
+    word-wrap: break-word;
+    vertical-align: middle;
+    font-size: 1rem;
+}
+
+/*
+.breadcrumb-div:hover {
+    color: #465EFF;
+    transform: translateY(-10.5px);
+}
+*/
+
+.textt-success{
+    background-color: aquamarine;
+    padding: 0.25rem 0.35rem;
+    font-size: 0.715rem;
+    color: white !important;
+    border-radius: 5px;
+}
+
+footer {
+    background-color: #d3d3d3;
+    align-content: center;
+    margin-top: auto; 
+}
+
+.text-footer{
+    color: #465EFF;
+    background-color: #465EFF;
+}
+
+@media (min-width: 768px) {
+    .navbar nav a{
+        max-width: 320px;
+    }
+}

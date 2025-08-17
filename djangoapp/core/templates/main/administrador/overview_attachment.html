@@ -1,0 +1,52 @@
+{% include 'others/nav.html' %}
+<main class="main-s">
+  <div class="control-sections-s">
+    <div class="section-content-1">
+      <h1>Novo Anexo</h1>
+      <hr />
+    </div>
+
+    <div class="section-content-2">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label><strong>Região:</strong></label>
+          <input type="text" name="region" class="form-control" value="{{ initial_data.region }}" readonly />
+        </div>
+
+        <div class="mb-3">
+          <label><strong>Estado:</strong></label>
+          <input type="text" name="state" class="form-control" value="{{ initial_data.state }}" readonly />
+        </div>
+
+        <div class="mb-3">
+          <label><strong>Estabelecimento:</strong></label>
+          <input type="text" name="center" class="form-control" value="{{ initial_data.center }}" readonly />
+        </div>
+
+        <div class="mb-3">
+          <label><strong>Tipo de Documento:</strong></label>
+          <input type="text" name="document" class="form-control" value="{{ initial_data.document }}" readonly />
+        </div>
+
+        <div class="mb-3">
+          <label><strong>Número do Documento:</strong></label>
+          <input type="text" name="number_doc" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+          <label><strong>Data de Vencimento:</strong></label>
+          <input type="date" name="data_expire" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+          <label><strong>Arquivo (PDF):</strong></label>
+          <input type="file" name="file" class="form-control" accept=".pdf" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </form>
+    </div>
+  </div>
+</main>

@@ -1,0 +1,493 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estabelecimentos</title>
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-div-all {
+            background-color: #FFF;
+            transition: .4s;
+            cursor: pointer;
+            color: black;
+            height: 100%;
+            border-radius: .25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 15px;
+            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+        }
+
+        .table-div-all .table {
+            font-size: 1.3rem;
+            width: 100%;
+            table-layout: fixed;
+            text-align: center;
+        }
+
+        .table-div-all .table,
+        .table-div-all .table td {
+            word-wrap: break-word;
+            vertical-align: middle;
+            font-size: 0.80rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+            <aside id="sidebar">
+                <div class="d-flex">
+                    <button class="toggle-btn" type="button">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="sidebar-logo">
+                        <a href="{% url 'home' %}"></a>
+                    </div>
+                </div>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-item">
+                        <a href="{% url 'home' %}" class="sidebar-link">
+                            <i class="bi bi-house"></i>
+                            <span><strong>Home</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span><strong>Anexos</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
+                            <i class="bi bi-plus-square"></i>
+                            <span><strong>Cadastro</strong></span>
+                        </a>
+                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
+                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
+                                     Relacionamento
+                                </a>
+                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
+                                    </li>
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
+                            <i class="bi bi-person-lock"></i>
+                            <span><strong>Administração</strong></span>
+                        </a>
+                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </aside>
+        <div class="main">
+          <nav class="navbar navbar-expand px-4 py-2">
+            <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+              <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
+              <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+            </a>
+          </nav>
+          <main class="content px-3 py-4">
+                {% if messages %}
+                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
+                    {% for message in messages %}
+                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                <div class="container-fluid">
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
+                                <div class="breadcrumb-div py-3 border-1">
+                                    <ol class="breadcrumb my-1 mx-2 px-3">
+                                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Início </a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Anexos</li>
+                                    </ol>
+                                    <h1 class="fw-bold fs-2 mx-5 mt-3">Anexos</h1>
+                                  </div>
+                                </div>
+                                <div class="col-12 col-lg-12 col-md-12">
+                                  <div class="table-div-all py-3 px-3 border-1">
+                                      <div class="small mt-3 mx-3">
+                                        <a href="{% url 'attachment_create' %}" class="btn btn-primary"><strong>Novo Anexo</strong></a>
+                                        <a href="{% url 'attachment_conference' %}" class="btn btn-primary histoconfer"><strong>Conferir</strong></a>
+                                        <a href="{% url 'attachment_history_all' %}" class="btn btn-primary histoconfer"><strong>Histórico</strong></a>
+                                      </div>
+                                      <div class="my-3 mx-3">
+                                        <span>Exibindo <b id="count-start">{{ page_obj.start_index }}</b>-<b id="count-end">{{ page_obj.end_index }}</b> de <b id="count-total">{{ page_obj.paginator.count }}</b> itens.</span>
+                                      </div>  
+                                      <hr class="mx-1 mb-4">
+                                      <div class="table-responsive">
+                                        <table class="table table-striped table-hover align-middle small">
+                                          <thead>
+                                            <tr>
+                                              <th width="180px">Documento</th>
+                                              <th width="180px">Região</th>
+                                              <th width="180px">Estado</th>
+                                              <th width="180px">Estabelecimento</th>
+                                              <th width="180px">Data de Anexo</th>
+                                              <th width="180px">Data de Vencimento</th>
+                                              <th width="180px">Situação</th>
+                                              <th width="180px" class="text-center">&nbsp;</th>
+                                            </tr>
+                                            <tr class="filters">
+                                              <td><input type="search" id="filter-document" class="form-control form-control-sm" placeholder="Buscar Documento"></td>
+                                              <td><input type="search" id="filter-region" class="form-control form-control-sm" placeholder="Buscar Região"></td>
+                                              <td><input type="search" id="filter-state" class="form-control form-control-sm" placeholder="Buscar Estado"></td>
+                                              <td><input type="search" id="filter-center" class="form-control form-control-sm" placeholder="Buscar Centro"></td>
+                                              <td><input type="search" id="filter-data_inserted" class="form-control form-control-sm" placeholder="Buscar Data de Anexo"></td>
+                                              <td><input type="search" id="filter-data_expire" class="form-control form-control-sm" placeholder="Buscar Data de Vencimento"></td>
+                                              <td><input type="search" id="filter-situation" class="form-control form-control-sm" placeholder="Buscar Situação"></td>
+                                              <td></td>
+                                            </tr>
+                                          </thead>
+                                          <tbody id="attachment-body">
+                                            {% for attachment in page_obj %}
+                                            <tr>
+                                              <td>{{ attachment.att_doc }}</td>
+                                              <td>{{ attachment.att_region }}</td>
+                                              <td>{{ attachment.att_state }}</td>
+                                              <td>{{ attachment.att_center }}</td>
+                                              <td>{{ attachment.att_data_inserted|date:"d/m/Y H:i" }}</td>
+                                              <td>{{ attachment.att_data_expire|date:"d/m/Y" }}</td>
+                                              <td>{{ attachment.att_situation }}</td>
+                                              <td class="text-end">
+                                                <div class="btn-group">
+                                                  <a class="btn btn-sm btn-outline-secondary"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#exampleModal"
+                                                    data-doc="{{ attachment.att_doc }} "
+                                                    data-status="{{ attachment.att_conference }}"
+                                                    data-id="{{ attachment.att_id }}"
+                                                    data-attached="{{ attachment.att_attached_by }}"
+                                                    data-inserted="{{ attachment.att_data_inserted|date:'d/m/Y H:i' }}"
+                                                    data-checked="{{ attachment.att_checked_by }}"
+                                                    data-conference="{{ attachment.att_data_conference|date:'d/m/Y H:i' }}"
+                                                    data-center="{{ attachment.att_center }}"
+                                                    data-expire="{{ attachment.att_data_expire|date:'d/m/Y' }}">
+                                                    <i class="fas fa-eye"></i>
+                                                  </a>
+                                                  <a class="btn btn-sm btn-outline-secondary"
+                                                    href="{% url 'attachment_history' attachment.att_doc attachment.att_region attachment.att_center %}">
+                                                    <i class="fas fa-clock"></i>
+                                                  </a>
+                                                </div>
+                                              </td>
+                                            </tr>
+                                            {% empty %}
+                                              <tr><td colspan="10">Nenhum anexo encontrado.</td></tr>
+                                            {% endfor %}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    <nav aria-label="Page navigation example" class="mt-3">
+                                        <ul class="pagination justify-content-center" id="pagination">
+                                            {% if page_obj.has_previous %}
+                                              <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                                            {% else %}
+                                              <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                            {% endif %}
+                                            {% for num in page_obj.paginator.page_range %}
+                                            {% if page_obj.number == num %}
+                                              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                            {% else %}
+                                              <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                            {% endif %}
+                                            {% endfor %}
+                                            {% if page_obj.has_next %}
+                                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                                            {% else %}
+                                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h2 class="modal-title">Visualização</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <table class="table table-striped table-bordered">
+                      <tr><th>Arquivo</th><td id="modal-file">
+                        <a href="#" id="view-pdf" class="btn btn-sm btn-outline-primary" target="_blank">Visualizar</a>
+                        <a href="#" id="download-pdf" class="btn btn-sm btn-outline-success" download>Baixar</a>
+                      </td></tr>
+                      <tr><th>Estabelecimento</th><td id="modal-center"></td></tr>
+                      <tr><th>Documento</th><td id="modal-document"></td></tr>
+                      <tr><th>Data de Vencimento</th><td id="modal-expire"></td></tr>
+                      <tr><th>Anexado por</th><td id="modal-attached"></td></tr>
+                      <tr><th>Conferido por</th><td id="modal-checked"></td></tr>
+                    </table>
+                    <table class="table table-lg table-bordered" id="unit-table">
+                      <thead>
+                        <tr><th>Unidade</th><th>CNPJ</th><th>NIRE</th><th>Inscrição Estadual</th><th>Inscrição Municipal</th></tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+    </div>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+          crossorigin="anonymous"></script>
+      <script src="{% static 'js/script.js' %}"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          const msgContainer = document.getElementById('msg-container');
+          if (msgContainer) {
+            setTimeout(() => {
+              [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+                const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+              });
+            }, 8000);
+          }
+        });
+      </script>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          const tbody = document.getElementById('attachment-body');
+          const urlHistoryTemplate = "{% url 'attachment_history' '__doc__' '__region__' '__center__' %}";
+          const filters = {
+            document: document.getElementById('filter-document'),
+            region: document.getElementById('filter-region'),
+            state: document.getElementById('filter-state'),
+            center: document.getElementById('filter-center'),
+            data_inserted: document.getElementById('filter-data_inserted'),
+            data_expire: document.getElementById('filter-data_expire'),
+            situation: document.getElementById('filter-situation'),
+          };
+
+          Object.values(filters).forEach(input => input.addEventListener('input', () => fetchFilteredResults(1)));
+
+          document.querySelector('.pagination')?.addEventListener('click', e => {
+            if (e.target.tagName === 'A') {
+              e.preventDefault();
+              const page = new URLSearchParams(e.target.href.split('?')[1]).get('page');
+              if (page) fetchFilteredResults(page);
+            }
+          });
+
+          function fetchFilteredResults(page = 1) {
+            const params = new URLSearchParams();
+            Object.entries(filters).forEach(([key, input]) => {
+              if (input.value.trim()) params.append(key, input.value.trim());
+            });
+            params.append('page', page);
+
+            fetch(window.location.pathname + '?' + params.toString(), {
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+              tbody.innerHTML = '';
+              document.getElementById('count-start').textContent = data.start_index;
+              document.getElementById('count-end').textContent = data.end_index;
+              document.getElementById('count-total').textContent = data.count;
+
+              data.results.forEach(a => {
+                const historyUrl = urlHistoryTemplate
+                  .replace('__doc__', encodeURIComponent(a.att_doc))
+                  .replace('__region__', encodeURIComponent(a.att_region))
+                  .replace('__center__', encodeURIComponent(a.att_center));
+
+                const row = document.createElement('tr');
+                row.innerHTML = ` 
+                  <td>${a.document}</td>
+                  <td>${a.region}</td>
+                  <td>${a.state}</td>
+                  <td>${a.center}</td>
+                  <td>${a.data_inserted}</td>
+                  <td>${a.data_expire}</td>
+                  <td>${a.situation}</td>
+                  <td class="text-end">
+                    <div class="btn-group">
+                      <a class="btn btn-sm btn-outline-secondary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#exampleModal"
+                        data-id="${a.id}"
+                        data-doc="${a.document}"
+                        data-file="${a.file_url || ''}"
+                        data-attached="${a.attached_by}"
+                        data-inserted="${a.data_inserted}"
+                        data-checked="${a.checked_by}"
+                        data-conference="${a.data_conference}"
+                        data-center="${a.center}"
+                        data-expire="${a.data_expire}">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                      <a class="btn btn-sm btn-outline-secondary" href="${historyUrl}">
+                        <i class="fas fa-clock"></i>
+                      </a>
+                    </div>
+                  </td>`;
+                tbody.appendChild(row);
+              });
+
+              const pagination = document.getElementById('pagination-container') || document.getElementById('pagination');
+              if (pagination) {
+                pagination.innerHTML = '';
+
+                if (data.current_page > 1) {
+                  pagination.innerHTML += `<li class="page-item">
+                    <a class="page-link" href="?page=${data.current_page - 1}">&laquo;</a>
+                  </li>`;
+                } else {
+                  pagination.innerHTML += `<li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                  </li>`;
+                }
+
+                for (let i = 1; i <= data.num_pages; i++) {
+                  if (i === data.current_page) {
+                    pagination.innerHTML += `<li class="page-item active">
+                      <span class="page-link">${i}</span>
+                    </li>`;
+                  } else {
+                    pagination.innerHTML += `<li class="page-item">
+                      <a class="page-link" href="?page=${i}">${i}</a>
+                    </li>`;
+                  }
+                }
+
+                if (data.current_page < data.num_pages) {
+                  pagination.innerHTML += `<li class="page-item">
+                    <a class="page-link" href="?page=${data.current_page + 1}">&raquo;</a>
+                  </li>`;
+                } else {
+                  pagination.innerHTML += `<li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                  </li>`;
+                }
+              }
+            });
+          }
+
+          // Abre modal, preenche campos e (ALTERAÇÃO PDF) busca links assinados
+          document.body.addEventListener('click', function (event) {
+            const button = event.target.closest('[data-bs-toggle="modal"]');
+            if (!button) return;
+
+            document.getElementById('modal-center').textContent = button.getAttribute('data-center') || '';
+            document.getElementById('modal-document').textContent = button.getAttribute('data-doc') || '';
+            document.getElementById('modal-expire').textContent = button.getAttribute('data-expire') || '';
+            document.getElementById('modal-checked').textContent =
+              (button.getAttribute('data-conference') || '') + ' - ' + (button.getAttribute('data-checked') || '');
+            document.getElementById('modal-attached').textContent =
+              (button.getAttribute('data-inserted') || '') + ' - ' + (button.getAttribute('data-attached') || '');
+
+            // >>> ALTERAÇÃO SOMENTE PARA PDF: gerar links assinados via API
+            const id = button.getAttribute('data-id');
+            const viewLink = document.getElementById('view-pdf');
+            const downloadLink = document.getElementById('download-pdf');
+
+            // limpa hrefs até carregar
+            viewLink.removeAttribute('href');
+            downloadLink.removeAttribute('href');
+
+            if (id) {
+              fetch(`/api/attachments/${encodeURIComponent(id)}/signed-links`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+              })
+              .then(r => r.ok ? r.json() : Promise.reject())
+              .then(d => {
+                // define os links assinados (inline e download)
+                viewLink.href = d.view_url || '#';
+                downloadLink.href = d.download_url || '#';
+              })
+              .catch(() => {
+                // fallback em caso de erro: desabilita (sem mexer no restante da UI)
+                viewLink.removeAttribute('href');
+                downloadLink.removeAttribute('href');
+              });
+            }
+
+            // Busca unidades por centro (inalterado)
+            const centerName = button.getAttribute('data-center');
+            fetch(`{% url 'attachment_units_by_center' %}?center=${encodeURIComponent(centerName || '')}`, {
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+              const unitTableBody = document.querySelector('#unit-table tbody');
+              unitTableBody.innerHTML = '';
+              if (data.units && data.units.length > 0) {
+                data.units.forEach(unit => {
+                  unitTableBody.innerHTML += `
+                    <tr>
+                      <td>${unit.ndest_units}</td>
+                      <td>${unit.ndest_cnpj}</td>
+                      <td>${unit.ndest_nire}</td>
+                      <td>${unit.ndest_reg_state}</td>
+                      <td>${unit.ndest_reg_city}</td>
+                    </tr>`;
+                });
+              } else {
+                unitTableBody.innerHTML = '<tr><td colspan="5">Nenhuma unidade encontrada.</td></tr>';
+              }
+            });
+          });
+        });
+      </script>
+
+  </body>
+</html>

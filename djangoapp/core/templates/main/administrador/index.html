@@ -1,0 +1,451 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Painel de Estabelecimentos</title>
+        <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <style>
+            .button-center {
+            display: inline-block;
+            padding: 7px 14px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease; 
+            }
+            .btn-success { background-color: rgb(115, 134, 255); }
+            .btn-warning { background-color: rgb(254, 254, 98); color: #465EFF; }
+            .btn-secondary { background-color: #6c757d; }
+            .button-center:hover { opacity: 0.9; }
+
+            .conteudo { display: flex; flex-direction: column; gap: 0px;}
+            .section-content-1 { padding: 15px; }
+            .section-1-title { display: flex; justify-content: space-between; align-items: center; }
+            .section-content-2 {
+            padding: 17px; border: 1px solid #ddd; border-radius: 6px;
+            background-color: #ffffffff; display: flex; align-items: center;
+            }
+            .regiao-nome { min-width: 150px; font-weight: bold; margin-left: 3px; }
+            .botoes-centro { display: flex; flex-wrap: wrap; margin-left: 10px; }
+
+            .btn-visao-geral {
+            background-color:  #465EFF;
+            color: white;
+            margin-left: 20px;
+            padding: 7px 14px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            }
+            .btn-visao-geral:hover {
+            opacity: 0.9;
+            }
+
+            .regiao-bloco {
+            margin-top: 35px;
+            margin-bottom: 25px;
+            padding: 25px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            text-align: left;
+            }
+            .regiao-titulo {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            }
+            .centro-nome {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            text-align: center;
+            }
+            .documentos-lista {
+            list-style: none;
+            padding: 0;
+            margin: 10px auto 20px auto;
+            display: block;
+            text-align: center;
+            }
+            .documentos-lista li {
+            display: inline-block;
+            margin: 0 10px;
+            }
+
+            .table-div {
+            background-color: #FFF;
+            transition: .4s;
+            color: black;
+            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+            height: 8rem;
+            border-radius: .25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <aside id="sidebar">
+                <div class="d-flex">
+                    <button class="toggle-btn" type="button">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="sidebar-logo">
+                        <a href="{% url 'home' %}"></a>
+                    </div>
+                </div>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-item">
+                        <a href="{% url 'home' %}" class="sidebar-link">
+                            <i class="bi bi-house"></i>
+                            <span><strong>Home</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span><strong>Anexos</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
+                            <i class="bi bi-plus-square"></i>
+                            <span><strong>Cadastro</strong></span>
+                        </a>
+                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
+                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
+                                     Relacionamento
+                                </a>
+                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
+                                    </li>
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
+                            <i class="bi bi-person-lock"></i>
+                            <span><strong>Administração</strong></span>
+                        </a>
+                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </aside>
+            <div class="main">
+                <nav class="navbar navbar-expand px-4 py-2">
+                    <a href="{% url 'home' %}" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+                        <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" /> 
+                        <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                    </a>
+                </nav>
+                <main class="content px-3 py-4">
+                {% if messages %}
+                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
+                    {% for message in messages %}
+                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                    <div class="container-fluid">
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">                                
+                                    <div class="row">
+                                        <div class="col-12 col-lg-12 col-md-12 pb-4">
+                                            <div class="breadcrumb-div py-3 border-1">
+                                                <ol class="breadcrumb my-1 mx-2 px-3">
+                                                    <li class="breadcrumb-item active" aria-current="page">Início</li>
+                                                </ol>
+                                                <h1 class="fw-bold fs-2 mx-5 mt-3">Início</h1>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-lg-4 col-md-12 mb-3">
+                                            <div class="card border-0">
+                                                <div class="card-body py-4">
+                                                    <h5 class="mb-4 fw-bold fs-4">
+                                                        Regularidade
+                                                    </h5>
+                                                    <h6 class="mb-2 px-5 fs-5">
+                                                        0
+                                                    </h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-lg-8 col-md-12 pb-4">
+                                            <div class="table-div py-3 border-1">
+                                                <div>
+                                                    <table class="table table-md">
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="fs-5">Vencido</th>
+                                                                <th class="fs-5">Invalidado</th>
+                                                                <th class="fs-5">A Vencer</th>
+                                                                <th class="fs-5">Em Análise</th>
+                                                                <th class="fs-5">Regular</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td class="fs-5">{{ count_expire }}</td>
+                                                                <td class="fs-5">{{ count_invalid }}</td>
+                                                                <td class="fs-5">{{ count_avencer }}</td>
+                                                                <td class="fs-5">{{ count_analise }}</td>
+                                                                <td class="fs-5">{{ count_regular }}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-12 col-lg-12 col-md-12">
+                                            <div class="main-s border-1">
+                                                <div class="titulo">
+                                                    <span>Estabelecimentos com Pendências</span>
+                                                </div>
+                                                <div class="control-sections-s">
+                                                    <div class="conteudo">
+                                                        <div class="section-content-2" id="regiao-NORTE"><div class="regiao-nome">NORTE</div><div class="botoes-centro"></div></div>
+                                                        <div class="section-content-2" id="regiao-NORDESTE"><div class="regiao-nome">NORDESTE</div><div class="botoes-centro"></div></div>
+                                                        <div class="section-content-2" id="regiao-CENTRO-OESTE"><div class="regiao-nome">CENTRO-OESTE</div><div class="botoes-centro"></div></div>
+                                                        <div class="section-content-2" id="regiao-SUDESTE"><div class="regiao-nome">SUDESTE</div><div class="botoes-centro"></div></div>
+                                                        <div class="section-content-2" id="regiao-SUL"><div class="regiao-nome">SUL</div><div class="botoes-centro"></div></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal fade" id="exampleModal" tabindex="-1">
+                                                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                    <table class="table table-striped table-bordered">
+                                                        <thead>
+                                                        <tr>
+                                                            <th></th>
+                                                            <th><strong>Estabelecimentos com Pendências</strong></th>
+                                                            <th><strong>Anexos Pendentes</strong></th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        <tr><th>Norte</th><td id="modal-estab-norte"></td><td id="modal-anexo-norte"></td></tr>
+                                                        <tr><th>Nordeste</th><td id="modal-estab-nordeste"></td><td id="modal-anexo-nordeste"></td></tr>
+                                                        <tr><th>Centro-Oeste</th><td id="modal-estab-centro"></td><td id="modal-anexo-centro"></td></tr>
+                                                        <tr><th>Sudeste</th><td id="modal-estab-sudeste"></td><td id="modal-anexo-sudeste"></td></tr>
+                                                        <tr><th>Sul</th><td id="modal-estab-sul"></td><td id="modal-anexo-sul"></td></tr>
+                                                        </tbody>
+                                                    </table>
+        
+                                                    <h4 style="text-align: center; margin-top: 45px;">Detalhamento dos Estabelecimentos com Pendências</h4>
+                                                    <div id="modal-detalhes-estab"></div>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                            </div>
+    
+                                            <div class="modal fade" id="centerModal" tabindex="-1">
+                                                <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                    <h5 class="modal-title" id="centerModalLabel"><strong>Informações do Estabelecimento</strong></h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                    <h5 id="titulo-centro" class="text-primary fw-bold" style="text-align: center; margin-bottom: 25px;"></h5>
+                                                    <h6><strong>👤 Responsáveis pelo Estabelecimento</strong></h6>
+                                                    <table class="table table-sm table-bordered">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>Nome</th><th>Email</th><th>Perfil</th><th>Unidade Gestora</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody id="user-table-body"></tbody>
+                                                    </table>
+                                                    <div id="info-invalidado" style="display: none; margin-top: 30px;"></div>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
+        <script src="{% static 'js/script.js' %}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+            const msgContainer = document.getElementById('msg-container');
+            if (msgContainer) {
+                setTimeout(() => {
+                [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                    bsAlert.close();
+                });
+                }, 8000);
+            }
+            });
+        </script>
+        <script>
+            const regionCenters = {{ region_centers_json|safe }};
+            const centersData = {{ centers_data_json|safe }};
+            const invalidByDoc = {{ invalid_by_document_json|safe }};
+
+            for (const [region, centers] of Object.entries(regionCenters)) {
+            const container = document.querySelector(`#regiao-${region} .botoes-centro`);
+            if (!container) continue;
+
+            centers.forEach(({ name, status }) => {
+                const btn = document.createElement("a");
+                btn.href = "#";
+                btn.className = `button-center btn-sm btn-${status}`;
+                btn.textContent = name;
+                btn.setAttribute("data-bs-toggle", "modal");
+                btn.setAttribute("data-bs-target", "#centerModal");
+
+                btn.addEventListener("click", () => {
+                const data = centersData[name];
+                const tbody = document.getElementById("user-table-body");
+                const section = document.getElementById("info-invalidado");
+                document.getElementById("titulo-centro").innerHTML = name;
+
+                tbody.innerHTML = "";
+                if (data.users.length > 0) {
+                    data.users.forEach(user => {
+                    tbody.innerHTML += `<tr>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.profile}</td>
+                        <td>${data.manage}</td>
+                    </tr>`;
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4">Nenhum usuário associado.</td></tr>`;
+                }
+
+                section.innerHTML = "";
+                if (data.invalidado && data.invalidado.length > 0) {
+                    section.style.display = "block";
+                    let html = "<h6><strong>📄 Anexos Pendentes</strong></h6><ul>";
+                    data.invalidado.forEach(doc => {
+                    html += `<li>${doc.document}</li>`;
+                    });
+                    html += "</ul>";
+                    section.innerHTML = html;
+                } else {
+                    section.style.display = "none";
+                }
+                });
+
+                container.appendChild(btn);
+            });
+            }
+
+            const regionKeys = {
+            'NORTE': 'norte', 'NORDESTE': 'nordeste', 'CENTRO-OESTE': 'centro', 'SUDESTE': 'sudeste', 'SUL': 'sul'
+            };
+
+            for (const [reg, slug] of Object.entries(regionKeys)) {
+            const centers = regionCenters[reg] || [];
+            const pendingCenters = centers.filter(c => centersData[c.name]?.invalidado?.length > 0);
+            const totalEstabs = pendingCenters.length;
+            let totalAnexos = 0;
+            pendingCenters.forEach(c => {
+                const invalids = centersData[c.name]?.invalidado || [];
+                totalAnexos += invalids.length;
+            });
+            document.getElementById(`modal-estab-${slug}`).textContent = totalEstabs;
+            document.getElementById(`modal-anexo-${slug}`).textContent = totalAnexos;
+            }
+
+            const detalhesContainer = document.getElementById("modal-detalhes-estab");
+            const porRegiao = {};
+            for (const [nomeCentro, dados] of Object.entries(centersData)) {
+            const region = dados.region?.toUpperCase() || '-';
+            if (!dados.invalidado || dados.invalidado.length === 0) continue;
+            porRegiao[region] = porRegiao[region] || [];
+            porRegiao[region].push({
+                nome: nomeCentro,
+                documentos: dados.invalidado.map(d => d.document)
+            });
+            }
+
+            const ordemRegioes = ['NORTE', 'NORDESTE', 'CENTRO-OESTE', 'SUDESTE', 'SUL'];
+            ordemRegioes.forEach(regiao => {
+            const centros = porRegiao[regiao];
+            if (!centros) return;
+
+            const bloco = document.createElement("div");
+            bloco.className = "regiao-bloco";
+            let html = `<div class="regiao-titulo">🗺️ ${regiao}</div>`;
+            centros.forEach(c => {
+                html += `<div class="centro-nome">📌 ${c.nome}</div>`;
+                html += `<ul class="documentos-lista">`;
+                c.documentos.forEach(doc => {
+                html += `<li>${doc}</li>`;
+                });
+                html += `</ul>`;
+            });
+            bloco.innerHTML = html;
+            detalhesContainer.appendChild(bloco);
+            });
+        </script>
+    </body>
+</html>
+

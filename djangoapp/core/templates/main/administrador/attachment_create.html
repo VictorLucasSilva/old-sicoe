@@ -1,0 +1,444 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estabelecimentos</title>
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+
+        .create-div-all {
+            background-color: #FFF;
+            transition: .4s;
+            cursor: pointer;
+            color: black;
+            height: 100%;
+            border-radius: .25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 15px;
+            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+        }
+
+        .create-div-all .table {
+            font-size: 1.2rem;
+            width: 100%;
+            table-layout: fixed;
+            text-align: center;
+        }
+
+        .create-div-all .table ,
+        .create-div-all .table td {
+            word-wrap: break-word;
+            vertical-align: middle;
+            font-size: 0.85rem;
+        }
+
+        .is-valid {
+            border-color: #198754;
+        }
+        .is-invalid {
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+            <aside id="sidebar">
+                <div class="d-flex">
+                    <button class="toggle-btn" type="button">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="sidebar-logo">
+                        <a href="{% url 'home' %}"></a>
+                    </div>
+                </div>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-item">
+                        <a href="{% url 'home' %}" class="sidebar-link">
+                            <i class="bi bi-house"></i>
+                            <span><strong>Home</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span><strong>Anexos</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
+                            <i class="bi bi-plus-square"></i>
+                            <span><strong>Cadastro</strong></span>
+                        </a>
+                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
+                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
+                                     Relacionamento
+                                </a>
+                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
+                                    </li>
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
+                            <i class="bi bi-person-lock"></i>
+                            <span><strong>Administração</strong></span>
+                        </a>
+                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </aside>
+        <div class="main">
+            <nav class="navbar navbar-expand px-4 py-2">
+                <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+                    <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
+                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                </a>
+            </nav>
+              <main class="content px-3 py-4">
+                {% if messages %}
+                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
+                    {% for message in messages %}
+                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                  <div class="container-fluid">
+                      <div class="mb-3">
+                          <div class="row">
+                              <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
+                                  <div class="breadcrumb-div py-3 border-1">
+                                      <ol class="breadcrumb my-1 mx-2 px-3">
+                                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Início </a></li>
+                                        <li class="breadcrumb-item"><a href="{% url 'attachment_list' %}">Anexos </a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Novo Anexo</li>
+                                      </ol>
+                                      <h1 class="fw-bold fs-2 mx-5 mt-3">Novo Anexo</h1>
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="row">
+                            <div class="col-12 col-lg-12 col-md-12">
+                              <div class="create-div-all py-5 px-5 border-1">
+                                <form method="POST" enctype="multipart/form-data" novalidate>
+                                {% csrf_token %}
+
+                                <div class="mb-4">
+                                    <label for="region-select" class="form-label"><strong>Região:</strong></label>
+                                    <select id="region-select" name="region" class="form-control">
+                                    <option value="" selected disabled>Selecione a Região</option>
+                                    <option value="Norte">Norte</option>
+                                    <option value="Nordeste">Nordeste</option>
+                                    <option value="Centro-Oeste">Centro-Oeste</option>
+                                    <option value="Sudeste">Sudeste</option>
+                                    <option value="Sul">Sul</option>
+                                    </select>
+                                    <div class="invalid-feedback">Por favor, selecione a região.</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="state-select" class="form-label"><strong>Estado:</strong></label>
+                                    <select id="state-select" name="state" class="form-control">
+                                    <option value="" selected disabled>Selecione o Estado</option>
+                                    </select>
+                                    <div class="invalid-feedback">Por favor, selecione o estado.</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="center-select" class="form-label"><strong>Estabelecimento:</strong></label>
+                                    <select id="center-select" name="center" class="form-control">
+                                    <option value="" selected disabled>Selecione o Estabelecimento</option>
+                                    </select>
+                                    <div class="invalid-feedback">Por favor, selecione o estabelecimento.</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="document-select" class="form-label"><strong>Documento:</strong></label>
+                                    <select id="document-select" name="document" class="form-control">
+                                    <option value="" selected disabled>Selecione o Documento</option>
+                                    </select>
+                                    <div class="invalid-feedback">Por favor, selecione o documento.</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="data-expire" class="form-label"><strong>Data de Vencimento:</strong></label>
+                                    <input type="date" name="data_expire" id="data-expire" class="form-control">
+                                    <div class="invalid-feedback">Por favor, informe a data de vencimento.</div>
+                                </div>
+
+                                <div class="mb-5">
+                                    <label for="file-upload" class="form-label"><strong>Anexo:</strong></label>
+                                    <input type="file" name="file" id="file-upload" class="form-control" accept="application/pdf,.pdf">
+                                    <div class="invalid-feedback">Por favor, selecione o arquivo PDF para anexar.</div>
+                                </div>
+
+                                <button type="button" id="btnAbrirModalSalvar" class="btn btn-primary">Salvar</button>
+                                <a href="{% url 'attachment_list' %}" class="btn btn-secondary">Voltar</a>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+                      </div>
+                  </div>
+              </main>
+                <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1" aria-labelledby="modalConfirmarSalvarLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-md mt-5 d-flex justify-content-center">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalConfirmarSalvarLabel">Confirmar envio</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                Deseja realmente salvar este anexo?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" id="btnConfirmarSalvar" class="btn btn-primary">
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinnerSalvar"></span>
+                                <span id="btnTextSalvar">Confirmar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <footer class="footer d-flex justify-content-center align-items-center">
+                    <div class="container-fluid">
+                        <div class="row text-body-secondary align-items-center justify-content-center">
+                            <div class="col-6 text-center pt-2">
+                                <a class="text-body-secondary" href="#">
+                                    <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
+        <script src="{% static 'js/script.js' %}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+            const msgContainer = document.getElementById('msg-container');
+            if (msgContainer) {
+                setTimeout(() => {
+                [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                    bsAlert.close();
+                });
+                }, 8000);
+            }
+            });
+            const form = document.querySelector('form');
+            const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
+            const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+            const spinner = document.getElementById('spinnerSalvar');
+            const btnText = document.getElementById('btnTextSalvar');
+
+            const region = document.getElementById('region-select');
+            const state = document.getElementById('state-select');
+            const center = document.getElementById('center-select');
+            const documentField = document.getElementById('document-select');
+            const dataExpire = document.getElementById('data-expire');
+            const file = document.getElementById('file-upload');
+
+            form.addEventListener('keydown', e => {
+                if (e.key === 'Enter') e.preventDefault();
+            });
+
+            function validarCampo(campo) {
+                const feedback = campo.parentElement.querySelector('.invalid-feedback');
+                let isValid = false;
+
+                if (campo.type === 'file') {
+                    const fileValue = campo.files[0];
+                    isValid = fileValue && fileValue.name.toLowerCase().endsWith('.pdf');
+                    if (!isValid && feedback) feedback.textContent = 'Somente arquivos PDF são permitidos.';
+                } 
+                else if (campo.type === 'date') {
+                    const today = new Date();
+                    const selectedDate = new Date(campo.value);
+                    selectedDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0);
+                    isValid = campo.value && selectedDate >= today;
+                    if (!isValid && feedback) feedback.textContent = 'Informe uma data de vencimento válida (hoje ou futura).';
+                } 
+                else {
+                    isValid = campo.value && campo.value.trim() !== "";
+                }
+
+                if (isValid) {
+                    campo.classList.remove('is-invalid');
+                    campo.classList.add('is-valid');
+                    if (feedback) feedback.style.display = 'none';
+                } else {
+                    campo.classList.add('is-invalid');
+                    campo.classList.remove('is-valid');
+                    if (feedback) feedback.style.display = 'block';
+                }
+
+                return isValid;
+                }
+
+            btnAbrirModal.addEventListener('click', function () {
+                const validacoes = [
+                    validarCampo(region),
+                    validarCampo(state),
+                    validarCampo(center),
+                    validarCampo(documentField),
+                    validarCampo(dataExpire),
+                    validarCampo(file)
+                ];
+
+                if (validacoes.every(v => v)) {
+                    const modal = new bootstrap.Modal(document.getElementById('modalConfirmarSalvar'));
+                    modal.show();
+                }
+            });
+
+            btnConfirmarSalvar.addEventListener('click', function () {
+                btnConfirmarSalvar.disabled = true;
+                btnText.classList.add('d-none');
+                spinner.classList.remove('d-none');
+                form.submit();
+            });
+
+            [region, state, center, documentField, dataExpire, file].forEach(campo => {
+                campo.addEventListener('input', () => validarCampo(campo));
+                campo.addEventListener('change', () => validarCampo(campo));
+            });
+        </script>
+        <script>
+          function getCookie(name) {
+              let cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  let cookies = document.cookie.split(';');
+                  for (let i = 0; i < cookies.length; i++) {
+                      let cookie = cookies[i].trim();
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+          const csrftoken = getCookie('csrftoken');
+
+          document.getElementById('region-select').addEventListener('change', function() {
+              const region = this.value;
+              fetch(`/administrador/anexo/cadastrar/?region=${encodeURIComponent(region)}`, {
+                  headers: { "X-CSRFToken": csrftoken }
+              })
+              .then(response => {
+                  if (!response.ok) throw new Error("Erro ao buscar estados.");
+                  return response.json();
+              })
+              .then(data => {
+                  console.log("Recebeu states:", JSON.stringify(data));
+                  const stateSelect = document.getElementById('state-select');
+                  stateSelect.innerHTML = '<option value="" selected disabled>Selecione o Estado</option>';
+                  data.states.forEach(state => {
+                      stateSelect.innerHTML += `<option value="${state}">${state}</option>`;
+                  });
+                  document.getElementById('center-select').innerHTML = '<option value="" selected disabled>Selecione o Estabelecimento</option>';
+                  document.getElementById('document-select').innerHTML = '<option value="" selected disabled>Selecione o Documento</option>';
+              })
+              .catch(err => {
+                  console.error("Erro:", err);
+                  alert("Falha ao carregar estados. Tente novamente.");
+              });
+          });
+
+          document.getElementById('state-select').addEventListener('change', function() {
+              const state = this.value;
+              const region = document.getElementById('region-select').value;
+              fetch(`/administrador/anexo/cadastrar/?region=${encodeURIComponent(region)}&state=${encodeURIComponent(state)}`, {
+                  headers: { "X-CSRFToken": csrftoken }
+              })
+              .then(response => {
+                  if (!response.ok) throw new Error("Erro ao buscar estabelecimentos.");
+                  return response.json();
+              })
+              .then(data => {
+                  console.log("Recebeu centers:", JSON.stringify(data));
+                  const centerSelect = document.getElementById('center-select');
+                  centerSelect.innerHTML = '<option value="" selected disabled>Selecione o Estabelecimento</option>';
+                  data.centers.forEach(center => {
+                      centerSelect.innerHTML += `<option value="${center}">${center}</option>`;
+                  });
+                  document.getElementById('document-select').innerHTML = '<option value="" selected disabled>Selecione o Documento</option>';
+              })
+              .catch(err => {
+                  console.error("Erro:", err);
+                  alert("Falha ao carregar estabelecimentos. Tente novamente.");
+              });
+          });
+
+          document.getElementById('center-select').addEventListener('change', function() {
+              const center = this.value;
+              const region = document.getElementById('region-select').value;
+              const state = document.getElementById('state-select').value;
+              fetch(`/administrador/anexo/cadastrar/?region=${encodeURIComponent(region)}&state=${encodeURIComponent(state)}&center=${encodeURIComponent(center)}`, {
+                  headers: { "X-CSRFToken": csrftoken }
+              })
+              .then(response => {
+                  if (!response.ok) throw new Error("Erro ao buscar documentos.");
+                  return response.json();
+              })
+              .then(data => {
+                  console.log("Recebeu documents:", JSON.stringify(data));
+                  const documentSelect = document.getElementById('document-select');
+                  documentSelect.innerHTML = '<option value="" selected disabled>Selecione o Documento</option>';
+                  data.documents.forEach(doc => {
+                      documentSelect.innerHTML += `<option value="${doc}">${doc}</option>`;
+                  });
+              })
+              .catch(err => {
+                  console.error("Erro:", err);
+                  alert("Falha ao carregar documentos. Tente novamente.");
+              });
+          });
+        </script>
+    </body>
+</html>
+

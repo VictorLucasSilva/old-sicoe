@@ -1,0 +1,266 @@
+{% include 'others/nav.html' %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Visão Geral dos Centros</title>
+  <style>
+    .button-center {
+      display: inline-block;
+      padding: 7px 14px;
+      margin: 5px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      text-decoration: none;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease; 
+    }
+    .btn-success { background-color: rgb(115, 134, 255); margin-left: 20px; }
+    .btn-warning { background-color: rgb(254, 254, 98); margin-left: 20px; color: #465EFF; }
+    .btn-secondary { background-color: #6c757d; margin-left: 20px; }
+    .button-center:hover { opacity: 0.9; }
+
+    .conteudo { display: flex; flex-direction: column; gap: 20px; margin-top: 20px; }
+    .section-content-1 { padding: 15px; }
+    .section-1-title { display: flex; justify-content: space-between; align-items: center; }
+    .section-content-2 {
+      padding: 15px; border: 1px solid #ddd; border-radius: 6px;
+      background-color: #f9f9f9; display: flex; align-items: center;
+    }
+    .regiao-nome { min-width: 150px; font-weight: bold; margin-left: 17px; }
+    .botoes-centro { display: flex; flex-wrap: wrap; margin-left: 20px; }
+
+    .btn-visao-geral {
+      background-color:  #465EFF;
+      color: white;
+      margin-left: 20px;
+      padding: 7px 14px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .btn-visao-geral:hover {
+      opacity: 0.9;
+    }
+
+    .regiao-bloco {
+      margin-top: 35px;
+      margin-bottom: 25px;
+      padding: 25px;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      text-align: left;
+    }
+    .regiao-titulo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .centro-nome {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .documentos-lista {
+      list-style: none;
+      padding: 0;
+      margin: 10px auto 20px auto;
+      display: block;
+      text-align: center;
+    }
+    .documentos-lista li {
+      display: inline-block;
+      margin: 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <main class="main-s">
+    <div class="control-sections-s">
+      <div class="section-content-1">
+        <div class="section-1-title">
+          <h1>Visão Geral</h1>
+        </div>
+        <hr />
+      </div>
+
+      <div class="conteudo">
+        <div class="section-content-2" id="regiao-NORTE"><div class="regiao-nome">NORTE</div><div class="botoes-centro"></div></div>
+        <div class="section-content-2" id="regiao-NORDESTE"><div class="regiao-nome">NORDESTE</div><div class="botoes-centro"></div></div>
+        <div class="section-content-2" id="regiao-CENTRO-OESTE"><div class="regiao-nome">CENTRO-OESTE</div><div class="botoes-centro"></div></div>
+        <div class="section-content-2" id="regiao-SUDESTE"><div class="regiao-nome">SUDESTE</div><div class="botoes-centro"></div></div>
+        <div class="section-content-2" id="regiao-SUL"><div class="regiao-nome">SUL</div><div class="botoes-centro"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal fade" id="exampleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Estabelecimentos com Pendências</th>
+                <th>Anexos Pendentes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th>Norte</th><td id="modal-estab-norte"></td><td id="modal-anexo-norte"></td></tr>
+              <tr><th>Nordeste</th><td id="modal-estab-nordeste"></td><td id="modal-anexo-nordeste"></td></tr>
+              <tr><th>Centro-Oeste</th><td id="modal-estab-centro"></td><td id="modal-anexo-centro"></td></tr>
+              <tr><th>Sudeste</th><td id="modal-estab-sudeste"></td><td id="modal-anexo-sudeste"></td></tr>
+              <tr><th>Sul</th><td id="modal-estab-sul"></td><td id="modal-anexo-sul"></td></tr>
+            </tbody>
+          </table>
+
+          <h4 style="text-align: center; margin-top: 45px;">Detalhamento dos Estabelecimentos com Pendências</h4>
+          <div id="modal-detalhes-estab"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="centerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="centerModalLabel">Informações do Centro</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <h5 id="titulo-centro" class="text-primary fw-bold" style="text-align: center; margin-bottom: 25px;"></h5>
+          <h6>👤 Responsáveis pelo Estabelecimento</h6>
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>Nome</th><th>Login</th><th>Email</th><th>Perfil</th><th>Unidade Gestora</th>
+              </tr>
+            </thead>
+            <tbody id="user-table-body"></tbody>
+          </table>
+          <div id="info-invalidado" style="display: none; margin-top: 30px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const regionCenters = {{ region_centers_json|safe }};
+    const centersData = {{ centers_data_json|safe }};
+    const invalidByDoc = {{ invalid_by_document_json|safe }};
+
+    for (const [region, centers] of Object.entries(regionCenters)) {
+      const container = document.querySelector(`#regiao-${region} .botoes-centro`);
+      if (!container) continue;
+
+      centers.forEach(({ name, status }) => {
+        const btn = document.createElement("a");
+        btn.href = "#";
+        btn.className = `button-center btn-sm btn-${status}`;
+        btn.textContent = name;
+        btn.setAttribute("data-bs-toggle", "modal");
+        btn.setAttribute("data-bs-target", "#centerModal");
+
+        btn.addEventListener("click", () => {
+          const data = centersData[name];
+          const tbody = document.getElementById("user-table-body");
+          const section = document.getElementById("info-invalidado");
+          document.getElementById("titulo-centro").innerHTML = name;
+
+          tbody.innerHTML = "";
+          if (data.users.length > 0) {
+            data.users.forEach(user => {
+              tbody.innerHTML += `<tr>
+                <td>${user.name}</td>
+                <td>${user.login}</td>
+                <td>${user.email}</td>
+                <td>${user.profile}</td>
+                <td>${data.manage}</td>
+              </tr>`;
+            });
+          } else {
+            tbody.innerHTML = `<tr><td colspan="5">Nenhum usuário associado.</td></tr>`;
+          }
+
+          section.innerHTML = "";
+          if (data.invalidado && data.invalidado.length > 0) {
+            section.style.display = "block";
+            let html = "<h6>📄 Anexos Pendentes</h6><ul>";
+            data.invalidado.forEach(doc => {
+              html += `<li>${doc.document}</li>`;
+            });
+            html += "</ul>";
+            section.innerHTML = html;
+          } else {
+            section.style.display = "none";
+          }
+        });
+
+        container.appendChild(btn);
+      });
+    }
+
+    const regionKeys = {
+      'NORTE': 'norte', 'NORDESTE': 'nordeste', 'CENTRO-OESTE': 'centro', 'SUDESTE': 'sudeste', 'SUL': 'sul'
+    };
+
+    for (const [reg, slug] of Object.entries(regionKeys)) {
+      const centers = regionCenters[reg] || [];
+      const pendingCenters = centers.filter(c => centersData[c.name]?.invalidado?.length > 0);
+      const totalEstabs = pendingCenters.length;
+      let totalAnexos = 0;
+      pendingCenters.forEach(c => {
+        const invalids = centersData[c.name]?.invalidado || [];
+        totalAnexos += invalids.length;
+      });
+      document.getElementById(`modal-estab-${slug}`).textContent = totalEstabs;
+      document.getElementById(`modal-anexo-${slug}`).textContent = totalAnexos;
+    }
+
+    const detalhesContainer = document.getElementById("modal-detalhes-estab");
+    const porRegiao = {};
+    for (const [nomeCentro, dados] of Object.entries(centersData)) {
+      const region = dados.region?.toUpperCase() || '-';
+      if (!dados.invalidado || dados.invalidado.length === 0) continue;
+      porRegiao[region] = porRegiao[region] || [];
+      porRegiao[region].push({
+        nome: nomeCentro,
+        documentos: dados.invalidado.map(d => d.document)
+      });
+    }
+
+    const ordemRegioes = ['NORTE', 'NORDESTE', 'CENTRO-OESTE', 'SUDESTE', 'SUL'];
+    ordemRegioes.forEach(regiao => {
+      const centros = porRegiao[regiao];
+      if (!centros) return;
+
+      const bloco = document.createElement("div");
+      bloco.className = "regiao-bloco";
+      let html = `<div class="regiao-titulo">🗺️ ${regiao}</div>`;
+      centros.forEach(c => {
+        html += `<div class="centro-nome">📌 ${c.nome}</div>`;
+        html += `<ul class="documentos-lista">`;
+        c.documentos.forEach(doc => {
+          html += `<li>${doc}</li>`;
+        });
+        html += `</ul>`;
+      });
+      bloco.innerHTML = html;
+      detalhesContainer.appendChild(bloco);
+    });
+  </script>
+</body>
+</html>

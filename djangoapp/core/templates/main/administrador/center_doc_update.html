@@ -1,0 +1,277 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estabelecimentos</title>
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+
+        .update-div-establishment-doc {
+            background-color: #FFF;
+            transition: .4s;
+            cursor: pointer;
+            color: black;
+            height: 100%;
+            border-radius: .25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 15px;
+            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+        }
+
+        .update-div-establishment-doc .table {
+            font-size: 0.875rem;
+            width: 100%;
+            table-layout: fixed;
+            text-align: center;
+        }
+
+        .update-div-establishment-doc .table th,
+        .update-div-establishment-doc .table td {
+            word-wrap: break-word;
+            vertical-align: middle;
+            font-size: 1rem;
+        }
+
+        .is-invalid { border-color: #dc3545; }
+        .is-valid { border-color: #00841fff; }
+        .text-danger { color: #dc3545; }
+        .text-success { color: #00841fff; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+            <aside id="sidebar">
+                <div class="d-flex">
+                    <button class="toggle-btn" type="button">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="sidebar-logo">
+                        <a href="{% url 'home' %}"></a>
+                    </div>
+                </div>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-item">
+                        <a href="{% url 'home' %}" class="sidebar-link">
+                            <i class="bi bi-house"></i>
+                            <span><strong>Home</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span><strong>Anexos</strong></span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
+                            <i class="bi bi-plus-square"></i>
+                            <span><strong>Cadastro</strong></span>
+                        </a>
+                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
+                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
+                                     Relacionamento
+                                </a>
+                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
+                                    </li>
+                                    <li class="sidebar-item">
+                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
+                            <i class="bi bi-person-lock"></i>
+                            <span><strong>Administração</strong></span>
+                        </a>
+                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                            <li class="sidebar-item">
+                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </aside>
+        <div class="main">
+            <nav class="navbar navbar-expand px-4 py-2">
+                <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+                    <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
+                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                </a>
+            </nav>
+              <main class="content px-3 py-4">
+                {% if messages %}
+                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
+                    {% for message in messages %}
+                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                  <div class="container-fluid">
+                      <div class="mb-3">
+                          <div class="row">
+                              <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
+                                  <div class="breadcrumb-div py-3 border-1">
+                                      <ol class="breadcrumb my-1 mx-2 px-3">
+                                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
+                                        <li class="breadcrumb-item"><a href="{% url 'center_doc_list' %}">Relação - Estabelecimento e Documento</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Alteração</li>
+                                      </ol>
+                                      <h1 class="fw-bold fs-2 mx-5 mt-3">Documentos</h1>
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="row">
+                            <div class="col-12 col-lg-12 col-md-12">
+                              <div class="update-div-establishment-doc py-5 px-5 border-1">
+                                <form method="POST" id="formCenterDoc">
+                                    {% csrf_token %}
+
+                                    {{ form.rcd_fk_establishment }}
+
+                                    <div class="mb-4">
+                                        <label class="mb-2"><strong>Estabelecimento</strong></label>
+                                        <input type="text" class="form-control" 
+                                            value="{{ rcd_l.rcd_fk_establishment.est_center }}" disabled>
+                                    </div>
+
+                                    <div class="mb-5">
+                                        <label class="mb-2"><strong>Documento</strong></label>
+                                        {{ form.rcd_fk_document }}
+                                        {% if form.rcd_fk_document.errors and form.is_bound %}
+                                        <div id="rcd_fk_document_error" class="text-danger small mt-1">
+                                            {% for error in form.rcd_fk_document.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% else %}
+                                        <div id="rcd_fk_document_error" class="small mt-1"></div>
+                                        {% endif %}
+                                    </div>
+
+                                    <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
+                                    <a href="{% url 'center_doc_list' %}" class="btn btn-secondary">Voltar</a>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+                      </div>
+                  </div>
+              </main>
+                <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirmar Alteração</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">Tem certeza que deseja salvar as alterações desta relação?</div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-danger" id="btnConfirmarSalvar">Confirmar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <footer class="footer d-flex justify-content-center align-items-center">
+                    <div class="container-fluid">
+                        <div class="row text-body-secondary align-items-center justify-content-center">
+                            <div class="col-6 text-center pt-2">
+                                <a class="text-body-secondary" href="#">
+                                    <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
+        <script src="{% static 'js/script.js' %}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const msgContainer = document.getElementById('msg-container');
+                if (msgContainer) {
+                    setTimeout(() => {
+                        msgContainer.querySelectorAll('.alert').forEach(alert => {
+                            bootstrap.Alert.getOrCreateInstance(alert).close();
+                        });
+                    }, 8000);
+                }
+
+                const form = document.getElementById('formCenterDoc');
+                form.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') e.preventDefault();
+                });
+
+                const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
+                const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+
+                btnAbrirModal.addEventListener('click', () => {
+                    new bootstrap.Modal(document.getElementById('modalConfirmarSalvar')).show();
+                });
+
+                btnConfirmarSalvar.addEventListener('click', () => {
+                    form.submit();
+                });
+
+                function validateField(field, errorElement, messageEmpty) {
+                    let value = field.value.trim();
+                    if (!value) {
+                        errorElement.textContent = messageEmpty;
+                        errorElement.className = "text-danger small mt-1";
+                        field.classList.add('is-invalid');
+                        field.classList.remove('is-valid');
+                    } else {
+                        errorElement.textContent = "";
+                        errorElement.className = "text-success small mt-1";
+                        field.classList.remove('is-invalid');
+                        field.classList.add('is-valid');
+                    }
+                }
+
+                const rcd_fk_document = document.getElementById('{{ form.rcd_fk_document.id_for_label }}');
+                const rcd_fk_document_error = document.getElementById('rcd_fk_document_error');
+
+                if (rcd_fk_document) {
+                    rcd_fk_document.addEventListener('change', function () {
+                        validateField(rcd_fk_document, rcd_fk_document_error, "O campo Documento é obrigatório.");
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>
+
