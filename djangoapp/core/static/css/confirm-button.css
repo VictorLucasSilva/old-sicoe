@@ -1,0 +1,27 @@
+/* Botão Confirmar (spinner lock) – PDE */
+.btn-confirm { position: relative; font-weight: 600; }
+.btn-confirm[aria-busy="true"] { pointer-events: none; }
+
+/* Mantém a mesma cor no hover/active/focus (sem variação indesejada) */
+.btn-primary.btn-confirm:hover,
+.btn-primary.btn-confirm:active,
+.btn-primary.btn-confirm:focus {
+background-color: var(--bs-primary);
+border-color: var(--bs-primary);
+}
+
+/* Alinhamento do spinner e acessibilidade */
+.btn-confirm [data-spinner] { vertical-align: -0.125em; }
+.btn-confirm[disabled] { opacity: .85; }
+
+/* Alternativa para labels invisíveis durante loading */
+.btn-confirm .visually-hidden { 
+    position: absolute !important; 
+    width: 1px !important; 
+    height: 1px !important; 
+    padding: 0 !important; 
+    margin: -1px !important; 
+    overflow: hidden !important; 
+    clip: rect(0,0,0,0) !important; 
+    white-space: nowrap !important; 
+    border: 0 !important; }

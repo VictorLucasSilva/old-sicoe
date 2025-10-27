@@ -1,0 +1,14 @@
+Olá, {{ admin_name|default:"Administrador(a)" }}!
+
+Há {{ items|length }} anexo(s) em análise no Sistema de Controle de Estabelecimento.
+
+Estabelecimento: {{ center }}
+Documento:      {{ document }}
+
+{% for it in items %}
+- #{{ it.att_id }} • anexado por {{ it.att_attached_by|default:"-" }} em {{ it.att_data_inserted|date:"d/m/Y H:i" }} • {{ it.att_city|default:"-" }}/{{ it.att_state|default:"-" }}
+{% empty %}
+- (Nenhum item encontrado)
+{% endfor %}
+
+Acesse: {{ address_url }}

@@ -1,0 +1,14 @@
+Olá {{ first_name }},
+
+{% if role == "USR" %}
+Documentos pendentes nos estabelecimentos sob sua responsabilidade:
+{% else %}
+Documentos pendentes nos seus escopos de atuação (UFs/Regiões):
+{% endif %}
+{% for scope, docs in scopes.items %}
+- {{ scope }}: {{ docs|join:', ' }}
+{% endfor %}
+
+Acesse: {{ address_url }}
+
+Atenciosamente.

@@ -1,0 +1,9 @@
+<button type="button"
+        class="btn btn-primary btn-confirm"
+        data-confirm-submit
+        data-target-form="{{ target_form|default:'#form-principal' }}"
+        id="{{ id|default:'btnConfirmar' }}">
+    <span class="spinner-border spinner-border-sm d-none"
+        role="status" aria-hidden="true" data-spinner></span>
+    <span data-label>{{ label|default:'Confirmar' }}</span>
+</button>

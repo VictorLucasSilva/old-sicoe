@@ -1,0 +1,1 @@
+from core.forms.administrador.form_update_adm import *

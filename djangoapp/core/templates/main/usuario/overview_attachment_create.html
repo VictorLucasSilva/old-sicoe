@@ -1,0 +1,375 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estabelecimentos</title>
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .create-div-all {
+            background-color: #FFF;
+            transition: .4s;
+            cursor: pointer;
+            color: black;
+            height: 100%;
+            border-radius: .25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 15px;
+            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+        }
+        .is-valid { border: 2px solid #198754; }
+        .is-invalid { border: 2px solid #dc3545; }
+        .req::after { content: " *"; color: #d00; }
+        .create-div-all .form-control:not(.is-valid):not(.is-invalid),
+        .create-div-all .form-select:not(.is-valid):not(.is-invalid),
+        .create-div-all .form-check-input:not(.is-valid):not(.is-invalid) {
+          border-color: #b8bec8;
+        }
+        .create-div-all .form-control:focus:not(.is-valid):not(.is-invalid),
+        .create-div-all .form-select:focus:not(.is-valid):not(.is-invalid),
+        .create-div-all .form-check-input:focus:not(.is-valid):not(.is-invalid) {
+          border-color: #9aa3b2;
+          box-shadow: 0 0 0 .2rem rgba(70, 94, 255, .08);
+        }
+        .create-div-all input[type="file"].form-control { border-color: #b8bec8; }
+        .date-wrapper .input-group-text{ cursor:pointer; }
+        .input-group.position-relative { position: relative; }
+        .calendar-overlay{
+            position: absolute; inset: 0 auto 0 0; 
+            width: 2.75rem;                         
+            opacity: 0; z-index: 3; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        {% include "others/sidebar_user.html" %}
+        <div class="main">
+            <nav class="navbar navbar-expand px-4 py-2">
+                <a href="{% url 'home_user' %}" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+                    <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
+                    <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
+                </a>
+            </nav>
+
+            <main class="content px-3 py-4">
+                {% if messages %}
+                <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index:1080; width:fit-content; max-width:90%;">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="container-fluid">
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
+                                <div class="breadcrumb-div py-3 border-1">
+                                    <ol class="breadcrumb my-1 mx-2 px-3">
+                                        <li class="breadcrumb-item"><a href="{% url 'home_user' %}">Início</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Cadastro de Anexo</li>
+                                    </ol>
+                                    <h1 class="fw-bold fs-2 mx-5 mt-3">Cadastro de Anexo</h1>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="col-12 col-lg-12 col-md-12">
+                            <div class="create-div-all py-5 px-5 border-1">
+                              <form method="POST" enctype="multipart/form-data" id="attachForm" novalidate>
+                                {% csrf_token %}
+
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label"><strong>Região:</strong></label>
+                                        <input type="text" name="region" class="form-control"
+                                               value="{{ initial_data.region|default:region }}" disabled />
+                                    </div>
+
+                                    <div class="col-md-3">
+                                      <label class="form-label"><strong>Estado:</strong></label>
+                                      <input type="text" name="state" class="form-control"
+                                      value="{{ initial_data.state|default:state }}" disabled/>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                      <label class="form-label"><strong>Estabelecimento:</strong></label>
+                                      <input type="text" name="center" class="form-control" disabled 
+                                      value="{{ initial_data.center|default:center }}"/>
+                                    </div>
+                                              
+                                    <div class="col-12">
+                                        <label class="form-label"><strong>Tipo de Documento:</strong></label>
+                                        <input type="text" name="document" class="form-control"
+                                      value="{{ initial_data.document|default:document }}" disabled />
+                                    </div>
+                                              
+                                    <div class="col-md-3">
+                                        <label for="id_file" class="form-label req"><strong>Arquivo (PDF):</strong></label>
+                                        <input type="file" id="id_file" name="file" class="form-control" accept="application/pdf,.pdf" required />
+                                        <div class="form-text">Apenas PDF. O arquivo será validado pelo sistema.</div>
+                                    </div>
+
+                                    <div class="col-md-3 date-wrapper" id="venc-wrapper">
+                                      <label for="data-expire" class="form-label req"><strong>Data de Vencimento:</strong></label>
+                                        <div class="input-group position-relative">
+                                          <span class="input-group-text" id="icon-cal" role="button" aria-label="Abrir calendário" tabindex="0">
+                                                <i class="bi bi-calendar3"></i>
+                                            </span>
+                                            <input type="date" id="native-date" class="calendar-overlay" aria-label="Calendário nativo">
+                                            <input
+                                            type="text"
+                                            name="data_expire"
+                                            id="data-expire"
+                                                class="form-control date-br"
+                                                inputmode="numeric"
+                                                autocomplete="off"
+                                                placeholder="DD/MM/AAAA"
+                                                maxlength="10"
+                                                data-role="datebr"
+                                                aria-describedby="icon-cal"
+                                                >
+                                        </div>
+                                        <div class="invalid-feedback">Por favor, informe a data de vencimento.</div>
+                                    </div>
+
+
+                                </div>
+
+                                <div class="mt-4 d-flex gap-2">
+                                    <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">
+                                        <i class="bi bi-upload"></i> Salvar
+                                    </button>
+                                    <a href="{% url 'home_user' %}" class="btn btn-secondary">Voltar</a>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Envio</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            Tem certeza que deseja enviar este anexo?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" id="btnConfirmarSalvar">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{% static 'js/script.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const msgContainer = document.getElementById('msg-container');
+        if (msgContainer) {
+        setTimeout(() => {
+            msgContainer.querySelectorAll('.alert').forEach(alert => {
+            bootstrap.Alert.getOrCreateInstance(alert).close();
+            });
+        }, 5000);
+        }
+
+        const form = document.getElementById('attachForm');
+        const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');  
+        const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+        const dataExpire = document.getElementById('data-expire'); 
+        const fileInput = document.getElementById('id_file');
+
+        form.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+
+        function parseDateBrToDate(v) {
+        if(!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return null;
+        const [d,m,y] = v.split('/').map(Number);
+        const dt = new Date(y, m-1, d, 0,0,0,0);
+        if(dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d) return null;
+        return dt;
+        }
+
+        function validarCampo(campo) {
+        const feedback = campo.closest('.col-md-3, .col-md-6, .col-12, .mb-4, .date-wrapper')?.querySelector('.invalid-feedback') || campo.parentElement.querySelector('.invalid-feedback');
+        let ok = false;
+
+        if (campo.type === 'file') {
+            const f = campo.files[0];
+            ok = !!(f && /\.pdf$/i.test(f.name));
+            if (feedback) feedback.textContent = ok ? '' : 'Somente arquivos PDF são permitidos.';
+        } else if (campo.dataset.role === 'datebr') {
+            const today = new Date(); today.setHours(0,0,0,0);
+            const dt = parseDateBrToDate(campo.value);
+            ok = !!dt && dt >= today;
+            if (feedback) feedback.textContent = ok ? '' : 'Informe DD/MM/AAAA (hoje ou futura).';
+        } else {
+            ok = campo.value && campo.value.trim() !== '';
+        }
+
+        campo.classList.toggle('is-valid', ok);
+        campo.classList.toggle('is-invalid', !ok);
+        if (feedback) feedback.style.display = ok ? 'none' : 'block';
+        return ok;
+        }
+
+        [dataExpire, fileInput].forEach(c => {
+        c.addEventListener('input', () => validarCampo(c));
+        c.addEventListener('change', () => validarCampo(c));
+        });
+
+        btnAbrirModal.addEventListener('click', function () {
+        const okDate = validarCampo(dataExpire);
+        const okFile = validarCampo(fileInput);
+        if (okDate && okFile) new bootstrap.Modal(document.getElementById('modalConfirmarSalvar')).show();
+        });
+
+        function lockWithSpinner(btn) {
+        if (!btn || btn.dataset.locked === '1') return;
+        btn.dataset.locked = '1';
+
+        const w = Math.ceil(btn.getBoundingClientRect().width);
+        btn.style.setProperty('--btnw', w + 'px');
+        btn.classList.add('btn-lock-width');
+        btn.disabled = true;
+        btn.setAttribute('aria-disabled', 'true');
+        btn.setAttribute('aria-busy', 'true');
+        btn.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span class="visually-hidden"></span>
+        `;
+        }
+
+        form.addEventListener('submit', function () {
+        lockWithSpinner(btnAbrirModal);
+        }, { once: true });
+
+        btnConfirmarSalvar.addEventListener('click', function () {
+        lockWithSpinner(btnAbrirModal);     
+        lockWithSpinner(btnConfirmarSalvar);
+
+        const m = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarSalvar'));
+        if (m) m.hide();
+        form.submit();
+        });
+    });
+    </script>
+
+    <script>
+    (function(){
+        const input = document.getElementById('data-expire');    
+        const nativeDate = document.getElementById('native-date'); 
+
+        const pad2 = n => String(n).padStart(2,'0');
+        const formatDateBr = (d) => `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+        function today0(){ const t = new Date(); t.setHours(0,0,0,0); return t; }
+
+        function parseDateBrToDate(v){
+            if(!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return null;
+            const [d,m,y] = v.split('/').map(Number);
+            const dt = new Date(y, m-1, d, 0,0,0,0);
+            if(dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d) return null;
+            return dt;
+        }
+        function toNativeISO(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+
+        nativeDate.min = toNativeISO(today0());
+
+        function mapRawIndexToFormatted(rawIdx){ let pos = rawIdx; if (pos > 2) pos += 1; if (pos > 4) pos += 1; return pos; }
+        function formatFrom(value, caret){
+            const raw = value.replace(/\D/g, '').slice(0, 8); 
+            const rawBefore = value.slice(0, (caret ?? value.length)).replace(/\D/g, '').length;
+
+            let formatted = '';
+            if (raw.length <= 2) formatted = raw;
+            else if (raw.length <= 4) formatted = raw.slice(0,2) + '/' + raw.slice(2);
+            else formatted = raw.slice(0,2) + '/' + raw.slice(2,4) + '/' + raw.slice(4);
+
+            let newCaret = mapRawIndexToFormatted(rawBefore);
+            if (newCaret > formatted.length) newCaret = formatted.length;
+            return { formatted, newCaret };
+        }
+
+        input.addEventListener('keydown', (ev) => {
+            const allowedNav = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'];
+            const val = input.value;
+            const pos = input.selectionStart ?? 0;
+
+            if (ev.key === 'Backspace' && pos > 0 && val[pos-1] === '/') { ev.preventDefault(); input.setSelectionRange(pos-1, pos-1); return; }
+            if (ev.key === 'Delete' && val[pos] === '/') { ev.preventDefault(); input.setSelectionRange(pos+1, pos+1); return; }
+
+            if (allowedNav.includes(ev.key)) return;
+            if (/^\d$/.test(ev.key)) return;
+            if (ev.ctrlKey || ev.metaKey) return;
+            ev.preventDefault();
+        });
+
+        function onInputMask() {
+            const caret = input.selectionStart ?? input.value.length;
+            const { formatted, newCaret } = formatFrom(input.value, caret);
+            input.value = formatted;
+            try { input.setSelectionRange(newCaret, newCaret); } catch(_) {}
+            try { validarCampo(input); } catch(_) {}
+        }
+        input.addEventListener('input', onInputMask);
+
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const txt = (e.clipboardData || window.clipboardData).getData('text') || '';
+            const raw = txt.replace(/\D/g, '').slice(0,8);
+            let formatted = '';
+            if (raw.length <= 2) formatted = raw;
+            else if (raw.length <= 4) formatted = raw.slice(0,2) + '/' + raw.slice(2);
+            else formatted = raw.slice(0,2) + '/' + raw.slice(2,4) + '/' + raw.slice(4);
+            input.value = formatted;
+            const end = input.value.length;
+            try { input.setSelectionRange(end, end); } catch(_) {}
+            try { validarCampo(input); } catch(_) {}
+            syncMaskedToNative();
+        });
+
+        nativeDate.addEventListener('change', () => {
+            if (!nativeDate.value) return;
+            const [y,m,d] = nativeDate.value.split('-').map(Number);
+            const picked = new Date(y, m-1, d, 0,0,0,0);
+            input.value = formatDateBr(picked);
+            try { validarCampo(input); } catch(_) {}
+        });
+
+        document.getElementById('venc-wrapper').addEventListener('click', (e) => {
+            if (e.target === input) return;
+            if (typeof nativeDate.showPicker === 'function') nativeDate.showPicker();
+            else { nativeDate.focus(); nativeDate.click(); }
+        });
+
+        function syncMaskedToNative(){
+            const dt = parseDateBrToDate(input.value);
+            if (dt) nativeDate.value = toNativeISO(dt);
+            else nativeDate.value = '';
+        }
+        input.addEventListener('blur', () => setTimeout(() => { try { validarCampo(input); } catch(_) {} syncMaskedToNative(); }, 50));
+        syncMaskedToNative();
+    })();
+    </script>
+</body>
+</html>

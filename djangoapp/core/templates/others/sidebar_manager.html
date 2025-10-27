@@ -1,0 +1,33 @@
+<aside id="sidebar" class="d-flex flex-column"> <!-- + d-flex flex-column -->
+    <div class="d-flex">
+        <button class="toggle-btn" type="button">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="sidebar-logo">
+            <a href="{% url 'home_manager' %}"></a>
+        </div>
+    </div>
+
+    <ul class="sidebar-nav d-flex flex-column flex-grow-1"> <!-- + d-flex flex-column flex-grow-1 -->
+        <li class="sidebar-item">
+            <a href="{% url 'home_manager' %}" class="sidebar-link">
+                <i class="bi bi-house"></i>
+                <span><strong>Início</strong></span>
+            </a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{% url 'attachment_list_manager' %}" class="sidebar-link">
+                <i class="bi bi-file-earmark-text"></i>
+                <span><strong>Anexos</strong></span>
+            </a>
+        </li>
+
+        <!-- Sair no rodapé -->
+        <li class="sidebar-item mt-auto"> <!-- trocado de mt-2 para mt-auto -->
+            <a href="{% url 'oidc_logout' %}" class="sidebar-link">
+                <i class="bi bi-box-arrow-left"></i>
+                <span><strong>Sair</strong></span>
+            </a>
+        </li>
+    </ul>
+</aside>

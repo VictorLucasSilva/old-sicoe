@@ -1,0 +1,81 @@
+<aside id="sidebar" class="d-flex flex-column"> 
+    <div class="d-flex">
+        <button class="toggle-btn" type="button">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="sidebar-logo">
+            <a href="{% url 'home' %}"></a>
+        </div>
+    </div>
+
+    <ul class="sidebar-nav d-flex flex-column flex-grow-1"> 
+        <li class="sidebar-item">
+            <a href="{% url 'home' %}" class="sidebar-link">
+                <i class="bi bi-house"></i>
+                <span><strong>Início</strong></span>
+            </a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{% url 'attachment_list' %}" class="sidebar-link">
+                <i class="bi bi-file-earmark-text"></i>
+                <span><strong>Anexos</strong></span>
+            </a>
+        </li>
+
+        <li class="sidebar-item">
+            <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+               data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
+                <i class="bi bi-plus-square"></i>
+                <span><strong>Cadastro</strong></span>
+            </a>
+            <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                <li class="sidebar-item">
+                    <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                       data-bs-target="#relation" aria-expanded="false" aria-controls="relation">
+                        Relacionamento
+                    </a>
+                    <ul id="relation" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#auth">
+                        <li class="sidebar-item">
+                            <a href="{% url 'center_doc_list' %}" class="sidebar-link">Víncular Documento</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="{% url 'center_user_list' %}" class="sidebar-link">Víncular Usuário</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+
+        <li class="sidebar-item">
+            <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+               data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
+                <i class="bi bi-person-lock"></i>
+                <span><strong>Administração</strong></span>
+            </a>
+            <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                <li class="sidebar-item">
+                    <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
+                </li>
+            </ul>
+        </li>
+
+        <li class="sidebar-item mt-auto">
+            <a href="{% url 'oidc_logout' %}" class="sidebar-link">
+                <i class="bi bi-box-arrow-left"></i>
+                <span><strong>Sair</strong></span>
+            </a>
+        </li>
+    </ul>
+</aside>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel de Estabelecimento</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:#f2f2f2; color:#8a8a8a; }
+    .container-login { height:100vh; display:flex; justify-content:center; align-items:center; }
+    .login-box { width:460px; border:2px solid #4353ff; border-radius:10px; background:#fff; overflow:hidden; }
+    .login-header { background:#4353ff; color:#fff; text-align:center; font-weight:bold; font-size:30px; padding:25px; }
+    .login-body { padding:40px 35px 30px; text-align:center; }
+    .login-body h2 { color:#4353ff; font-size:20px; font-weight:bold; margin-bottom:20px; }
+    .divider-line { width:60%; height:1px; background:#ccc; margin:20px auto 30px; }
+    .login-form { width:88%; margin:0 auto; }
+    .login-form button { width:85%; padding:12px; margin-top:15px; background:#f5ff00; color:#4353ff; font-weight:bold; font-size:15px; border:none; border-radius:8px; cursor:pointer; }
+    .login-form button:hover { filter:brightness(95%); }
+    .login-footer { font-size:13px; color:#4353ff; text-align:center; font-weight:bold; padding:15px 0; }
+    .alert { margin-bottom:15px; font-size:14px; }
+  </style>
+</head>
+<body>
+<div class="container-login">
+  <div class="login-box">
+    <div class="login-header">SICOE</div>
+    <div class="login-body">
+      <h2>Autenticação</h2>
+      <div class="divider-line"></div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="get" action="{% url 'oidc_login' %}" class="login-form">
+        {% csrf_token %}
+        <button type="submit">Entrar com Microsoft</button>
+      </form>
+    </div>
+    <div class="login-footer">© BB Tecnologia E Serviços 2025</div>
+  </div>
+</div>
+</body>
+</html>
