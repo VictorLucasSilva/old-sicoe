@@ -62,6 +62,56 @@
     .filters .dropdown-menu{
       border-color: var(--filtro-borda);
     }
+    /* Stack no canto superior direito */
+.wnoty-stack{
+  position:fixed; top:1.25rem; right:1.25rem;
+  width: min(380px, 92vw);
+  display:flex; flex-direction:column; gap:.6rem;
+  z-index:1080;
+}
+
+/* Cartão base */
+.wnoty-item{
+  position:relative;
+  display:flex; align-items:center; gap:.75rem;
+  background:#fff; border-radius:.6rem;
+  box-shadow: 0 .35rem .85rem rgba(0,0,0,.12);
+  padding:.75rem .9rem .75rem .75rem;
+  animation:wnoty-in .18s ease-out both;
+}
+
+/* Barrinha colorida à esquerda */
+.wnoty-colorbar{
+  position:absolute; left:0; top:0; bottom:0; width:.35rem;
+  border-top-left-radius:.6rem; border-bottom-left-radius:.6rem;
+  background:var(--accent);
+}
+
+/* Ícone redondinho */
+.wnoty-icon{
+  width:2rem; height:2rem; border-radius:50%;
+  display:grid; place-items:center; font-size:1.05rem;
+  background:var(--accent-weak); color:var(--accent);
+  flex:0 0 auto;
+}
+
+.wnoty-text{ flex:1; font-size:.95rem; }
+.wnoty-close{
+  border:0; background:transparent; font-size:1.2rem;
+  line-height:1; opacity:.55; cursor:pointer;
+}
+.wnoty-close:hover{ opacity:.9; }
+
+/* Temas */
+.wnoty-success{ --accent:#28a745; --accent-weak:#EAF7EE; }
+.wnoty-info   { --accent:#0dcaf0; --accent-weak:#E7FAFF; }
+.wnoty-warning{ --accent:#ffc107; --accent-weak:#FFF8E1; }
+.wnoty-danger { --accent:#dc3545; --accent-weak:#FDECEE; }
+
+/* Animações */
+@keyframes wnoty-in { from{ transform:translateX(16px); opacity:.0 } to{ transform:none; opacity:1 } }
+@keyframes wnoty-out{ to{ transform:translateX(16px); opacity:.0 } }
+.wnoty-hide   { animation:wnoty-out .18s ease-in forwards; }
 
   </style>
 </head>
@@ -77,16 +127,54 @@
     </nav>
 
     <main class="content px-3 py-4">
-      {% if messages %}
-      <div id="msg-container" class="position-fixed top-4 end-0 me-4 mt-3 p-4" style="z-index:1080; width:fit-content; max-width:90%;">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-          </div>
-        {% endfor %}
-      </div>
-      {% endif %}
+      {% for message in messages %}
+        {% if 'success' in message.tags %}
+          {% with type='success' icon='bi-check-circle' %}
+            <div class="wnoty-item wnoty-{{ type }}" role="status">
+              <div class="wnoty-colorbar"></div>
+              <div class="wnoty-icon"><i class="bi {{ icon }}"></i></div>
+              <div class="wnoty-text">{{ message }}</div>
+              <button class="wnoty-close" aria-label="Fechar">&times;</button>
+            </div>
+          {% endwith %}
+        {% elif 'info' in message.tags %}
+          {% with type='info' icon='bi-info-circle' %}
+            <div class="wnoty-item wnoty-{{ type }}" role="status">
+              <div class="wnoty-colorbar"></div>
+              <div class="wnoty-icon"><i class="bi {{ icon }}"></i></div>
+              <div class="wnoty-text">{{ message }}</div>
+              <button class="wnoty-close" aria-label="Fechar">&times;</button>
+            </div>
+          {% endwith %}
+        {% elif 'warning' in message.tags %}
+          {% with type='warning' icon='bi-exclamation-triangle' %}
+            <div class="wnoty-item wnoty-{{ type }}" role="status">
+              <div class="wnoty-colorbar"></div>
+              <div class="wnoty-icon"><i class="bi {{ icon }}"></i></div>
+              <div class="wnoty-text">{{ message }}</div>
+              <button class="wnoty-close" aria-label="Fechar">&times;</button>
+            </div>
+          {% endwith %}
+        {% elif 'danger' in message.tags or 'error' in message.tags %}
+          {% with type='danger' icon='bi-x-circle' %}
+            <div class="wnoty-item wnoty-{{ type }}" role="status">
+              <div class="wnoty-colorbar"></div>
+              <div class="wnoty-icon"><i class="bi {{ icon }}"></i></div>
+              <div class="wnoty-text">{{ message }}</div>
+              <button class="wnoty-close" aria-label="Fechar">&times;</button>
+            </div>
+          {% endwith %}
+        {% else %}
+          {% with type='info' icon='bi-info-circle' %}
+            <div class="wnoty-item wnoty-{{ type }}" role="status">
+              <div class="wnoty-colorbar"></div>
+              <div class="wnoty-icon"><i class="bi {{ icon }}"></i></div>
+              <div class="wnoty-text">{{ message }}</div>
+              <button class="wnoty-close" aria-label="Fechar">&times;</button>
+            </div>
+          {% endwith %}
+        {% endif %}
+      {% endfor %}
 
       <div class="container-fluid">
         <div class="mb-3">
@@ -221,7 +309,7 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
             <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
               Confirmar
-              <span id="loading-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span>
+              <span id="loading-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" style="display:none;"></span>
             </button>
           </div>
         </div>
@@ -249,17 +337,24 @@
   })();
 </script>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const msgContainer = document.getElementById('msg-container');
-    if (msgContainer) {
-      setTimeout(() => {
-        [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
-          const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-          bsAlert.close();
-        });
-      }, 5000);
-    }
+  document.addEventListener('DOMContentLoaded', () => {
+  const stack = document.getElementById('wnoty');
+  if (!stack) return;
+
+  function hide(el){
+    el.classList.add('wnoty-hide');
+    el.addEventListener('animationend', () => el.remove(), { once:true });
+  }
+
+  stack.querySelectorAll('.wnoty-item').forEach((el, i) => {
+    // botão fechar
+    el.querySelector('.wnoty-close')?.addEventListener('click', () => hide(el));
+    const AUTO_CLOSE=5000;
+    const STAGGER=0;
+    // auto-fecha (leve “stagger” pra não sumirem todas iguais)
+    setTimeout(() => hide(el), AUTO_CLOSE + i*STAGGER);
   });
+});
   $.ajaxSetup({ headers: { 'X-Requested-With': 'XMLHttpRequest' } });
 
   $(function () {
