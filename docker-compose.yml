@@ -12,7 +12,23 @@ services:
       - "8000:8000"
     depends_on:
       - psql_pde
-      - redis
+    networks:
+      - rede_app_painel
+
+  scheduler:
+    build:
+      context: .
+    command: /bin/sh /scripts/scheduler.sh
+    volumes:
+      - ./djangoapp:/djangoapp
+      - ./data/web/static:/data/web/static/
+      - ./data/web/media:/data/web/media/
+      - ./scripts:/scripts
+    env_file:
+      - ./dotenv_files/.env
+    depends_on:
+      - psql_pde
+    restart: unless-stopped
     networks:
       - rede_app_painel
 
@@ -23,45 +39,6 @@ services:
       - ./data/postgres/data:/var/lib/postgresql/data/
     env_file:
       - ./dotenv_files/.env
-    networks:
-      - rede_app_painel
-
-  redis:
-    container_name: redis
-    image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      - "6379:6379"
-    env_file:
-      - ./dotenv_files/.env
-    networks:
-      - rede_app_painel
-
-  celery:
-    build:
-      context: .
-    command: celery -A project worker -l info
-    volumes:
-      - ./djangoapp:/djangoapp
-    env_file:
-      - ./dotenv_files/.env
-    depends_on:
-      - psql_pde
-      - redis
-    networks:
-      - rede_app_painel
-
-  celery-beat:
-    build:
-      context: .
-    command: celery -A project beat -l info
-    volumes:
-      - ./djangoapp:/djangoapp
-    env_file:
-      - ./dotenv_files/.env
-    depends_on:
-      - redis
-      - psql_pde
     networks:
       - rede_app_painel
 

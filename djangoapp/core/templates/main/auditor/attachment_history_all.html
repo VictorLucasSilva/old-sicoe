@@ -1,0 +1,914 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Estabelecimentos</title>
+
+  <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  <style>
+    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    .table-div-all{
+      background-color:#FFF; transition:.4s; cursor:pointer; color:#000;
+      height:100%; border-radius:.25rem; display:flex; flex-direction:column;
+      justify-content:flex-start; padding:15px; box-shadow:.2rem .2rem .3rem .1rem rgb(191,191,191);
+    }
+    .table-div-all .table{ font-size:1.3rem; width:100%; table-layout:fixed; text-align:center; }
+    .table-div-all .table, .table-div-all .table td{ word-wrap:break-word; vertical-align:middle; font-size:.83rem; }
+    .calendar-overlay{
+      position:absolute; inset:0 auto 0 0;
+      width:2.75rem; opacity:0; z-index:3; cursor:pointer;
+    }
+    .input-group.position-relative{ position:relative; }
+    .dropdown-menu.filtro-menu{
+      max-height:40vh;
+      overflow-y:auto;
+      overflow-x:hidden;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+    }
+    .btn-status{ pointer-events:none; cursor:default; }
+    .btn-status:disabled{ opacity:1; }
+    .btn-2xs{
+      padding:.130rem .35rem;
+      font-size:.85rem;
+      line-height:1.1;
+      border-radius:.25rem;
+      white-space:nowrap;
+      font-weight:600;
+    }
+    :root{
+      --filtro-borda: #aaaaaaff;   
+    }
+
+    .filters .form-control,
+    .filters .dropdown > .btn,
+    .filters .input-group-text{
+      border-color: var(--filtro-borda);
+      border-width: 1px;          
+      border-radius: .375rem;     
+    }
+    .filters .input-group .input-group-text{
+      background: #fff;           
+      border-right-color: var(--filtro-borda);
+    }
+    .filters .input-group .form-control{
+      border-left-color: var(--filtro-borda);
+    }
+    .filters .form-control:focus,
+    .filters .dropdown > .btn:focus,
+    .filters .dropdown > .btn.show{
+      box-shadow: 0 0 0 .2rem var(--filtro-glow);
+    }
+    .filters .dropdown > .btn-outline-secondary{
+      --bs-btn-border-color: var(--filtro-borda);
+      --bs-btn-hover-border-color: var(--filtro-borda-focus);
+      --bs-btn-focus-shadow-rgb: 37,99,235; 
+    }
+    .filters .dropdown-menu{
+      border-color: var(--filtro-borda);
+    }
+
+    i.bi-eye,
+    i.bi-clock-history{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1em;
+      height: 1.5em;
+      border: 3px solid var(--icon-border);
+      border-radius: 50%;
+      padding: .15em;    
+      line-height: 1;
+      vertical-align: middle;
+    }
+    a:hover i.bi-eye,
+    a:hover i.bi-clock-history{
+      border-color: var(--icon-border-hover);
+    }
+
+    .btn-outline-secondary:has(> i.bi-eye),
+    .btn-outline-secondary:has(> i.bi-clock-history){
+      border-color: #909090ff;
+    }
+    :root{
+      --amarelo-avencer: #FCFC30;   
+      --amarelo-avencer-hover: #E8E819;
+      --amarelo-avencer-borda: #E0E000;
+    }
+
+    .btn-avencer{
+      --bs-btn-color: #212529;
+      --bs-btn-bg: var(--amarelo-avencer);
+      --bs-btn-border-color: var(--amarelo-avencer-borda);
+      --bs-btn-hover-color: #212529;
+      --bs-btn-hover-bg: var(--amarelo-avencer-hover);
+      --bs-btn-hover-border-color: var(--amarelo-avencer-borda);
+      --bs-btn-active-color: #212529;
+      --bs-btn-active-bg: var(--amarelo-avencer-hover);
+      --bs-btn-active-border-color: var(--amarelo-avencer-borda);
+      --bs-btn-disabled-color: #212529;
+      --bs-btn-disabled-bg: var(--amarelo-avencer);
+      --bs-btn-disabled-border-color: var(--amarelo-avencer-borda);
+    }
+
+    .btn.btn-avencer{
+      background-color: var(--amarelo-avencer);
+      border-color: var(--amarelo-avencer-borda);
+      color: #212529;
+    }
+    #invalid-alert{
+      background-color: rgba(var(--bs-emphasis-color-rgb), .01);
+      border: 1.5px solid rgba(var(--bs-emphasis-color-rgb), .15);
+      color: #000;
+      text-align: center;
+    }
+    #invalid-alert .alert-title{ margin: 0; }
+    #invalid-alert .alert-body{
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      color: #000;
+    }
+
+    :root{ --pde-border: rgba(var(--bs-emphasis-color-rgb), .15); }
+    .table{ --bs-table-border-color: var(--pde-border); }
+    .table, .table-bordered{ border-color: var(--pde-border); }
+    .table > :not(caption) > * > *{ border-color: var(--pde-border); }
+
+  </style>
+</head>
+
+<body>
+<div class="wrapper">
+  {% include "others/sidebar_audit.html" %}
+  <div class="main">
+    <nav class="navbar navbar-expand px-4 py-2">
+      <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+        <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2"/>
+        <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
+      </a>
+    </nav>
+
+    <main class="content px-3 py-4">
+      {% if messages %}
+      <div id="msg-container" class="position-fixed top-4 end-0 me-4 mt-3 p-4" style="z-index:1080; width:fit-content; max-width:90%;">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="container-fluid">
+        <div class="mb-3">
+          <div class="row">
+            <div class="col-12 col-lg-12 col-md-12 pb-3 mt-2">
+              <div class="breadcrumb-div py-3 border-1">
+                <ol class="breadcrumb my-1 mx-2 px-3">
+                  <li class="breadcrumb-item"><a href="{% url 'home_audit' %}">Início</a></li>
+                  <li class="breadcrumb-item"><a href="{% url 'attachment_list_audit' %}">Anexos</a></li>
+                  <li class="breadcrumb-item active" aria-current="page">Histórico Geral</li>
+                </ol>
+                <h1 class="fw-bold fs-2 mx-5 mt-3">Histórico Geral</h1>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-12 col-md-12">
+              <div class="table-div-all py-4 px-4 border-1">
+                <div class="col-12 col-lg-12 col-md-12 mb-3">
+                  <div class="table-div-all py-3 px-3 border-1">
+                    <div class="my-3 mx-3">
+                      Exibindo <b id="count-start">{{ page_obj.start_index }}</b>-<b id="count-end">{{ page_obj.end_index }}</b> de <b id="count-total">{{ page_obj.paginator.count }}</b> itens.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12 col-lg-12 col-md-12 mb-4">
+                  <div class="table-div-all py-3 px-3 border-1">
+                    <div class="table-responsive">
+                      <table class="table table-striped table-hover align-middle small">
+                        <thead>
+                          <tr>
+                            <th width="180px">Documento</th>
+                            <th width="180px">Região</th>
+                            <th width="180px">Estado</th>
+                            <th width="180px">Estabelecimento</th>
+                            <th width="180px">Data de Anexo</th>
+                            <th width="180px">Data de Vencimento</th>
+                            <th width="180px">Situação</th>
+                            <th class="text-center" width="180px">&nbsp;</th>
+                          </tr>
+                          <tr class="filters">
+                            <td><input type="text" id="filter-document"   class="form-control form-control-sm" placeholder="Documento"></td>
+                            <td><input type="text" id="filter-region"     class="form-control form-control-sm" placeholder="Região"></td>
+                            <td><input type="text" id="filter-state"      class="form-control form-control-sm" placeholder="Estado"></td>
+                            <td><input type="text" id="filter-center"     class="form-control form-control-sm" placeholder="Estabelecimento"></td>
+
+                            <td>
+                              <div class="input-group position-relative">
+                                <span class="input-group-text" role="button" aria-label="Abrir calendário"><i class="bi bi-calendar3"></i></span>
+                                <input type="date" id="filter-data_inserted_native" class="calendar-overlay" aria-label="Calendário nativo Anexo">
+                                <input type="text" id="filter-data_inserted" class="form-control form-control-sm date-br"
+                                      inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA" maxlength="10">
+                              </div>
+                            </td>
+                            <td>
+                              <div class="input-group position-relative">
+                                <span class="input-group-text" role="button" aria-label="Abrir calendário"><i class="bi bi-calendar3"></i></span>
+                                <input type="date" id="filter-data_expire_native" class="calendar-overlay" aria-label="Calendário nativo Vencimento">
+                                <input type="text" id="filter-data_expire" class="form-control form-control-sm date-br"
+                                      inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA" maxlength="10">
+                              </div>
+                            </td>
+
+                            <td><input type="text" id="filter-situation"  class="form-control form-control-sm" placeholder="Situação"></td>
+                            <td></td>
+                          </tr>
+                        </thead>
+
+                        <tbody id="attachment-body">
+                          {% for attachment in page_obj %}
+                          <tr>
+                            <td>{{ attachment.att_doc }}</td>
+                            <td>{{ attachment.att_region }}</td>
+                            <td>{{ attachment.att_state }}</td>
+                            <td>{{ attachment.att_center }}</td>
+                            <td>{{ attachment.att_data_inserted|date:"d/m/Y H:i" }}</td>
+                            <td>{{ attachment.att_data_expire|date:"d/m/Y" }}</td>
+                            <td class="text-center">
+                              {% with st=attachment.att_situation|default_if_none:"-"|lower %}
+                                <button type="button"
+                                        class="btn btn-2xs btn-status
+                                          {% if "vencido" in st %}btn-danger
+                                          {% elif "a vencer" in st or "a-vencer" in st %}btn-avencer
+                                          {% elif "regular" in st %}btn-success
+                                          {% elif "invalidado" in st %}btn-warning
+                                          {% else %}btn-secondary{% endif %}"
+                                        disabled
+                                        aria-label="Status: {{ attachment.att_situation|default:"-" }}">
+                                  {{ attachment.att_situation|default:"-" }}
+                                </button>
+                              {% endwith %}
+                            </td>
+                            <td class="text-end">
+                              <div class="btn-group">
+                                <a class="btn btn-sm btn-outline-secondary"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#exampleModal"
+                                  data-doc="{{ attachment.att_doc }}"
+                                  data-file="{{ attachment.att_file.url }}"
+                                  data-attached="{{ attachment.att_attached_by }}"
+                                  data-inserted="{{ attachment.att_data_inserted|date:'d/m/Y H:i' }}"
+                                  data-checked="{{ attachment.att_checked_by }}"
+                                  data-conference="{{ attachment.att_data_conference|date:'d/m/Y H:i' }}"
+                                  data-center="{{ attachment.att_center }}"
+                                  data-expire="{{ attachment.att_data_expire|date:'d/m/Y' }}"
+                                  data-situation="{{ attachment.att_situation }}"
+                                  data-just="{{ attachment.att_just|default_if_none:'' }}">
+                                  <i class="bi bi-eye"></i>
+                                </a>
+                              </div>
+                            </td>
+                          </tr>
+                          {% empty %}
+                          <tr><td colspan="8">Nenhum anexo encontrado.</td></tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <nav class="mt-3">
+                  <ul class="pagination justify-content-center" id="pagination-container">
+                    {% if page_obj.has_previous %}
+                      <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" data-page="{{ page_obj.previous_page_number }}">&laquo;</a>
+                      </li>
+                    {% else %}
+                      <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    {% endif %}
+                    {% if page_obj.number < 10 %}
+                      {% for num in page_obj.paginator.page_range %}
+                        {% if num <= 10 %}
+                          {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                          {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}" data-page="{{ num }}">{{ num }}</a></li>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    {% else %}
+                      {% for num in page_obj.paginator.page_range %}
+                        {% if num >= page_obj.number|add:"-9" and num <= page_obj.number %}
+                          {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                          {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}" data-page="{{ num }}">{{ num }}</a></li>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    {% endif %}
+
+                    {% if page_obj.has_next %}
+                      <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" data-page="{{ page_obj.next_page_number }}">&raquo;</a>
+                      </li>
+                    {% else %}
+                      <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                    {% endif %}
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+    </main>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+          <div class="modal-header position-relative">
+            <h2 class="modal-title w-100 text-center" id="exampleModalLabel">Informações do Anexo</h2>
+            <button type="button"
+                    class="btn-close position-absolute end-0 top-50 translate-middle-y me-3"
+                    data-bs-dismiss="modal"
+                    aria-label="Fechar"></button>
+          </div>
+          <div class="mx-4 my-4">
+            <div id="invalid-alert" class="alert d-none text-black mb-4 mt-1" role="alert">
+              <div class="d-flex align-items-start gap-3 flex-nowrap">
+                <div class="alert-title fw-bold flex-shrink-0">Motivo da Invalidação :</div>
+                <div id="invalid-just" class="alert-body flex-grow-1 text-start"></div>
+              </div>
+            </div>
+            <table class="table table-striped table-bordered mt-2">
+              <tr>
+                <th>Arquivo</th>
+                <td id="modal-file">
+                  <a href="#" id="view-pdf" class="btn btn-sm btn-primary" target="_blank">Visualizar PDF</a>
+                  <a href="#" id="download-pdf" class="btn btn-sm btn-primary" download>Baixar PDF</a>
+                </td>
+              </tr>
+              <tr><th>Estabelecimento</th><td id="modal-center"></td></tr>
+              <tr><th>Documento</th><td id="modal-document"></td></tr>
+              <tr><th>Data de Vencimento</th><td id="modal-expire"></td></tr>
+              <tr><th>Anexado por</th><td id="modal-attached"></td></tr>
+              <tr><th>Conferido por</th><td id="modal-checked"></td></tr>
+            </table>
+            <table class="table table-lg table-bordered" id="unit-table">
+              <thead>
+                <tr>
+                  <th>Unidade</th><th>CNPJ</th><th>NIRE</th>
+                  <th>Inscrição Estadual</th><th>Inscrição Municipal</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/script.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const msgContainer = document.getElementById('msg-container');
+    if (msgContainer) {
+      setTimeout(() => {
+        [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+          const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+          bsAlert.close();
+        });
+      }, 8000);
+    }
+  });
+</script>
+<script>
+  const pad2 = n => String(n).padStart(2,'0');
+
+  function parseDateBrToDate(v){
+    if(!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return null;
+    const [d,m,y] = v.split('/').map(Number);
+    const dt = new Date(y, m-1, d, 0,0,0,0);
+    if(dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d) return null;
+    return dt;
+  }
+  function toISODateFromBr(v){
+    const dt = parseDateBrToDate(v);
+    if(!dt) return '';
+    return `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
+  }
+  function formatDateBr(d){ return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; }
+
+  function attachDateBrMask({ textInput, nativeInput, minToday=false, onChange=null }){
+    if(!textInput || !nativeInput) return;
+
+    if(minToday){
+      const t = new Date(); t.setHours(0,0,0,0);
+      nativeInput.min = `${t.getFullYear()}-${pad2(t.getMonth()+1)}-${pad2(t.getDate())}`;
+    }
+
+    function mapRawIndexToFormatted(rawIdx){ let pos = rawIdx; if(pos>2) pos+=1; if(pos>4) pos+=1; return pos; }
+    function formatFrom(value, caret){
+      const raw = value.replace(/\D/g,'').slice(0,8);
+      const rawBefore = value.slice(0,(caret ?? value.length)).replace(/\D/g,'').length;
+      let f = '';
+      if      (raw.length <= 2) f = raw;
+      else if (raw.length <= 4) f = raw.slice(0,2)+'/'+raw.slice(2);
+      else                      f = raw.slice(0,2)+'/'+raw.slice(2,4)+'/'+raw.slice(4);
+      let newCaret = mapRawIndexToFormatted(rawBefore);
+      if(newCaret > f.length) newCaret = f.length;
+      return { formatted:f, newCaret };
+    }
+
+    textInput.addEventListener('keydown', (ev)=>{
+      const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'];
+      const val = textInput.value;
+      const pos = textInput.selectionStart ?? 0;
+      if (ev.key === 'Backspace' && pos>0 && val[pos-1] === '/'){ ev.preventDefault(); textInput.setSelectionRange(pos-1,pos-1); return; }
+      if (ev.key === 'Delete' && val[pos] === '/'){ ev.preventDefault(); textInput.setSelectionRange(pos+1,pos+1); return; }
+      if (allowed.includes(ev.key)) return;
+      if (/^\d$/.test(ev.key)) return;
+      if (ev.ctrlKey || ev.metaKey) return;
+      ev.preventDefault();
+    });
+
+    function reformatAndSync(){
+      const caret = textInput.selectionStart ?? textInput.value.length;
+      const { formatted, newCaret } = formatFrom(textInput.value, caret);
+      textInput.value = formatted;
+      try { textInput.setSelectionRange(newCaret, newCaret); } catch(_){}
+      const iso = toISODateFromBr(textInput.value);
+      nativeInput.value = iso || '';
+      if (typeof onChange === 'function') onChange();
+    }
+    textInput.addEventListener('input', reformatAndSync);
+
+    textInput.addEventListener('paste', (e)=>{
+      e.preventDefault();
+      const txt = (e.clipboardData || window.clipboardData).getData('text') || '';
+      const raw = txt.replace(/\D/g,'').slice(0,8);
+      let f = '';
+      if      (raw.length <= 2) f = raw;
+      else if (raw.length <= 4) f = raw.slice(0,2)+'/'+raw.slice(2);
+      else                      f = raw.slice(0,2)+'/'+raw.slice(2,4)+'/'+raw.slice(4);
+      textInput.value = f;
+      const end = textInput.value.length;
+      try { textInput.setSelectionRange(end,end); } catch(_){}
+      reformatAndSync();
+    });
+
+    nativeInput.addEventListener('change', () => {
+      if (!nativeInput.value) {
+        textInput.value = '';
+        nativeInput.value = '';
+        if (typeof onChange === 'function') onChange();
+        return;
+      }
+      const [y, m, d] = nativeInput.value.split('-').map(Number);
+      const picked = new Date(y, m - 1, d, 0, 0, 0, 0);
+      textInput.value = formatDateBr(picked);
+      if (typeof onChange === 'function') onChange();
+    });
+    nativeInput.addEventListener('input', () => {
+      if (!nativeInput.value) {
+        textInput.value = '';
+        if (typeof onChange === 'function') onChange();
+      }
+    });
+
+    const wrapper = textInput.closest('.input-group.position-relative') || textInput.parentElement;
+    wrapper.addEventListener('click', (e)=>{
+      if (e.target === textInput) return;
+      if (typeof nativeInput.showPicker === 'function') nativeInput.showPicker();
+      else { nativeInput.focus(); nativeInput.click(); }
+    });
+  }
+</script>
+<script>
+$(function () {
+  const urlList = window.location.pathname;
+  const urlHistoryTemplate = "{{ url_history_template }}";
+  const $tbody = $('#attachment-body');
+  const $pagination = $('#pagination-container');
+  const FIELDS = [
+    { id:'#filter-document',  param:'document',  key:'document',  label:'Documento' },
+    { id:'#filter-region',    param:'region',    key:'region',    label:'Região' },
+    { id:'#filter-state',     param:'state',     key:'state',     label:'Estado' },
+    { id:'#filter-center',    param:'center',    key:'center',    label:'Estabelecimento' },
+    { id:'#filter-situation', param:'situation', key:'situation', label:'Situação' },
+  ];
+  const optionTokens = Object.fromEntries(FIELDS.map(f => [f.param, 0]));
+  let latestLoadToken = 0;
+  let pendingCloseParam = null;
+  const esc = (s) => (s ?? '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+  function toISOIfDate(id){
+    const el = document.querySelector(id);
+    if (el && el.classList.contains('date-br')) {
+      const iso = toISODateFromBr(el.value.trim());
+      return iso || '';
+    }
+    return (el?.value || '').trim();
+  }
+
+  function ensureDropdown(field) {
+    const $orig = $(field.id);
+    if (!$orig.length || $orig.data('enhanced')) return;
+
+    const id = $orig.attr('id');
+    const currentVal = ($orig.val && $orig.val()) || '';
+
+    const $wrap = $(`
+      <div class="dropdown w-100" data-bs-boundary="viewport">
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary w-100 text-truncate"
+                data-bs-toggle="dropdown"
+                data-bs-auto-close="outside"
+                data-bs-display="static"
+                aria-expanded="false"
+                title="${esc(field.label)}">Todos</button>
+        <ul class="dropdown-menu filtro-menu w-100 p-0" data-param="${field.param}"></ul>
+        <input type="hidden" id="${id}">
+      </div>
+    `);
+
+    $orig.replaceWith($wrap);
+    $wrap.find('input[type="hidden"]').val(currentVal);
+    $wrap.data('enhanced', true);
+
+    rebuildDropdownOptions(field, [], false);
+  }
+
+  function els(field){
+    const $hidden = $(field.id);
+    const $wrap   = $hidden.closest('.dropdown');
+    return {
+      $hidden,
+      $wrap,
+      $menu: $wrap.find('.dropdown-menu'),
+      $btn:  $wrap.find('[data-bs-toggle="dropdown"]')
+    };
+  }
+
+  function setDropdownLoading(field){
+    const { $menu } = els(field);
+    $menu.html(`
+      <li><button type="button" class="dropdown-item" data-value="">Todos</button></li>
+      <li><div class="px-3 py-2 small text-body-secondary">Carregando opções…</div></li>
+    `);
+  }
+
+  function rebuildDropdownOptions(field, values, keepSelection){
+    const { $menu, $hidden, $btn } = els(field);
+    const prev = (keepSelection ? $hidden.val() : '') || '';
+
+    let html = `<li><button type="button" class="dropdown-item${prev===''?' active':''}" data-value="">Todos</button></li>`;
+    values.forEach(v => {
+      const isActive = (v === prev) ? ' active' : '';
+      html += `<li><button type="button" class="dropdown-item${isActive}" data-value="${esc(v)}" title="${esc(v)}">${esc(v)}</button></li>`;
+    });
+
+    $menu.html(html);
+    $btn.text(prev || 'Todos').attr('title', prev || 'Todos');
+  }
+
+  $(document).on('show.bs.dropdown', '.dropdown', function(){
+    const $menu = $(this).find('.dropdown-menu');
+    const rect  = this.getBoundingClientRect();
+    const gap   = 8;
+    const avail = Math.max(120, Math.floor(window.innerHeight - rect.bottom - gap));
+    $menu.css({ 'max-height': `${avail}px`, 'overflow-y': 'auto', 'overflow-x': 'hidden' });
+  });
+
+  $(document).on('click', '.dropdown-menu[data-param] .dropdown-item', function(e){
+    e.preventDefault();
+    const $menu = $(this).closest('.dropdown-menu');
+    const param = $menu.data('param');
+    const field = FIELDS.find(f => f.param === param);
+    if (!field) return;
+
+    const value = $(this).data('value') || '';
+    const { $hidden, $btn } = els(field);
+
+    $menu.find('.dropdown-item.active').removeClass('active');
+    $(this).addClass('active');
+
+    $hidden.val(value).trigger('change');
+    $btn.text(value || 'Todos').attr('title', value || 'Todos');
+
+    pendingCloseParam = field.param;
+  });
+
+  FIELDS.forEach(ensureDropdown);
+
+  function getCurrentFilters(){
+    const filters = {
+      document:  $('#filter-document').val()  || '',
+      region:    $('#filter-region').val()    || '',
+      state:     $('#filter-state').val()     || '',
+      center:    $('#filter-center').val()    || '',
+      situation: $('#filter-situation').val() || '',
+      data_expire: toISOIfDate('#filter-data_expire'),
+    };
+
+    const diISO = toISOIfDate('#filter-data_inserted');
+    const otherActive = !!(
+      filters.document || filters.region || filters.state ||
+      filters.center   || filters.situation || filters.data_expire
+    );
+    filters.data_inserted = otherActive ? '' : diISO;
+
+    return filters;
+  }
+
+  function fetchPage(params){
+    return $.ajax({
+      url: urlList,
+      data: params,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      dataType: 'json'
+    });
+  }
+
+  function statusBtnHTML(sit) {
+    const st = (sit || '').toString().trim().toLowerCase();
+    let cls = 'btn-secondary';
+    if (st.includes('vencido')) cls = 'btn-danger';
+    else if (st.includes('a vencer') || st.includes('a-vencer')) cls = 'btn-avencer';
+    else if (st.includes('regular')) cls = 'btn-success';
+    else if (st.includes('invalidado')) cls = 'btn-warning';
+    return `<button type="button" class="btn btn-status btn-2xs ${cls}" disabled aria-label="Status: ${sit || '-'}">${sit || '-'}</button>`;
+  }
+
+  function renderRows(results){
+    const $tbody = $('#attachment-body');
+    $tbody.empty();
+    if (!Array.isArray(results) || !results.length) {
+      $tbody.append('<tr><td colspan="8">Nenhum anexo encontrado.</td></tr>');
+      return;
+    }
+    results.forEach(a => {
+      const historyUrl = (urlHistoryTemplate || '')
+        .replace('__doc__', encodeURIComponent(a.document))
+        .replace('__region__', encodeURIComponent(a.region))
+        .replace('__center__', encodeURIComponent(a.center));
+
+    $tbody.append(`
+      <tr>
+        <td>${esc(a.document)}</td>
+        <td>${esc(a.region)}</td>
+        <td>${esc(a.state)}</td>
+        <td>${esc(a.center)}</td>
+        <td>${esc(a.data_inserted)}</td>
+        <td>${esc(a.data_expire)}</td>
+        <td class="text-center">${statusBtnHTML(a.situation)}</td>
+        <td class="text-end">
+          <div class="btn-group">
+            <a class="btn btn-sm btn-outline-secondary"
+              data-bs-toggle="modal"
+              data-bs-target="#exampleModal"
+              data-doc="${esc(a.document)}"
+              data-file="${esc(a.file_url)}"
+              data-attached="${esc(a.attached_by)}"
+              data-inserted="${esc(a.data_inserted)}"
+              data-checked="${esc(a.checked_by)}"
+              data-conference="${esc(a.data_conference)}"
+              data-center="${esc(a.center)}"
+              data-expire="${esc(a.data_expire)}"
+              data-situation="${esc(a.situation)}"
+              data-just="${esc(a.justification || '')}">
+              <i class="bi bi-eye"></i>
+            </a>
+          </div>
+        </td>
+      </tr>
+    `);
+    });
+  }
+
+  function renderCounters(start, end, total){
+    $('#count-start').text(start);
+    $('#count-end').text(end);
+    $('#count-total').text(total);
+  }
+
+  function renderPagination(current, total){
+    const $pagination = $('#pagination-container');
+    $pagination.empty();
+
+    const start = Math.max(1, current - 9);
+    const end   = Math.min(total, start + 9);
+
+    if (current > 1) {
+      $pagination.append(
+        `<li class="page-item"><a class="page-link" href="?page=${current-1}" data-page="${current-1}">&laquo;</a></li>`
+      );
+    } else {
+      $pagination.append('<li class="page-item disabled"><span class="page-link">&laquo;</span></li>');
+    }
+    for (let i = start; i <= end; i++) {
+      if (i === current) {
+        $pagination.append(`<li class="page-item active"><span class="page-link">${i}</span></li>`);
+      } else {
+        $pagination.append(`<li class="page-item"><a class="page-link" href="?page=${i}" data-page="${i}">${i}</a></li>`);
+      }
+    }
+    if (current < total) {
+      $pagination.append(
+        `<li class="page-item"><a class="page-link" href="?page=${current+1}" data-page="${current+1}">&raquo;</a></li>`
+      );
+    } else {
+      $pagination.append('<li class="page-item disabled"><span class="page-link">&raquo;</span></li>');
+    }
+  }
+
+  function returnDropdownToPlace(){
+    if (!pendingCloseParam) return;
+    const field = FIELDS.find(f => f.param === pendingCloseParam);
+    if (!field) { pendingCloseParam = null; return; }
+    const { $wrap, $menu, $hidden } = els(field);
+
+    const btnEl = $wrap.find('[data-bs-toggle="dropdown"]')[0];
+    if (btnEl) {
+      const inst = bootstrap.Dropdown.getOrCreateInstance(btnEl);
+      inst.hide();
+    }
+
+    const selected = $hidden.val() || '';
+    if (selected) rebuildDropdownOptions(field, [selected], true);
+    $menu.scrollTop(0);
+    pendingCloseParam = null;
+  }
+
+  async function refreshOptionsForField(field){
+    const { $hidden } = els(field);
+    const selected = $hidden.val() || '';
+
+    if (selected){
+      rebuildDropdownOptions(field, [selected], true);
+      return;
+    }
+
+    const token = ++optionTokens[field.param];
+    const base = getCurrentFilters();
+    delete base[field.param];
+
+    setDropdownLoading(field);
+
+    try {
+      const first = await fetchPage({ ...base, page: 1 });
+      if (token !== optionTokens[field.param]) return;
+
+      const totalPages = Math.max(1, first.num_pages || 1);
+      const seen = new Set();
+      const values = [];
+      (first.results || []).forEach(r => {
+        const v = (r[field.key] || '').toString();
+        if (v && !seen.has(v)) { seen.add(v); values.push(v); }
+      });
+
+      rebuildDropdownOptions(field, values, true);
+
+      if (totalPages > 1){
+        const reqs = [];
+        for (let p=2; p<=totalPages; p++){
+          reqs.push(
+            fetchPage({ ...base, page: p }).then(pg => {
+              if (token !== optionTokens[field.param]) return;
+              const adds = [];
+              (pg.results || []).forEach(r => {
+                const v = (r[field.key] || '').toString();
+                if (v && !seen.has(v)) { seen.add(v); adds.push(v); }
+              });
+              if (adds.length){
+                values.push(...adds);
+                rebuildDropdownOptions(field, values, true);
+              }
+            }).catch(()=>{})
+          );
+        }
+        await Promise.allSettled(reqs);
+      }
+    } finally {
+      const { $menu } = els(field);
+      $menu.find('.text-body-secondary:contains("Carregando")').closest('li').remove();
+    }
+  }
+
+  async function refreshAllOptions(){
+    await Promise.allSettled(FIELDS.map(refreshOptionsForField));
+  }
+
+  function loadAllPaginated(page=1){
+    const token = ++latestLoadToken;
+    const filters = getCurrentFilters();
+
+    fetchPage({ ...filters, page }).done(async (resp) => {
+      if (token !== latestLoadToken) return;
+      renderRows(resp.results || []);
+      renderCounters(resp.start_index ?? 0, resp.end_index ?? 0, resp.count ?? 0);
+      renderPagination(resp.current_page ?? 1, resp.num_pages ?? 1);
+
+      await refreshAllOptions();
+      returnDropdownToPlace();
+    });
+  }
+
+  FIELDS.forEach(f => {
+    $(document).on('change', f.id, function(){
+      loadAllPaginated(1);
+    });
+  });
+
+  $pagination.on('click', 'a.page-link', function(e){
+    e.preventDefault();
+    const page = $(this).data('page');
+    if (page) loadAllPaginated(page);
+  });
+
+  const diText   = document.getElementById('filter-data_inserted');
+  const diNative = document.getElementById('filter-data_inserted_native');
+  const deText   = document.getElementById('filter-data_expire');
+  const deNative = document.getElementById('filter-data_expire_native');
+
+  window.fetchFilteredResults = function(page=1){
+    loadAllPaginated(page);
+  };
+
+  const triggerSearch = () => fetchFilteredResults(1);
+  attachDateBrMask({ textInput: diText, nativeInput: diNative, minToday:false, onChange:triggerSearch });
+  attachDateBrMask({ textInput: deText, nativeInput: deNative, minToday:false, onChange:triggerSearch });
+  loadAllPaginated(1);
+
+  document.body.addEventListener('click', function (event) {
+    const button = event.target.closest('[data-bs-toggle="modal"]');
+    if (!button) return;
+
+    document.getElementById('modal-center').textContent   = button.getAttribute('data-center') || '';
+    document.getElementById('modal-document').textContent = button.getAttribute('data-doc') || '';
+    document.getElementById('modal-expire').textContent   = button.getAttribute('data-expire') || '';
+    document.getElementById('modal-checked').textContent  =
+      (button.getAttribute('data-conference') || '') + ' - ' + (button.getAttribute('data-checked') || '');
+    document.getElementById('modal-attached').textContent =
+      (button.getAttribute('data-inserted') || '') + ' - ' + (button.getAttribute('data-attached') || '');
+
+    const fileUrl = button.getAttribute('data-file') || '#';
+    document.getElementById('view-pdf').href = fileUrl;
+    document.getElementById('download-pdf').href = fileUrl;
+
+    const situation = (button.getAttribute('data-situation') || '').trim().toLowerCase();
+    const justification = (button.getAttribute('data-just') || '').trim();
+    const alertBox = document.getElementById('invalid-alert');
+    const justBox  = document.getElementById('invalid-just');
+
+    if (situation.includes('invalidado') && justification) {
+      justBox.textContent = justification;  
+      alertBox.classList.remove('d-none');
+    } else {
+      justBox.textContent = '';
+      alertBox.classList.add('d-none');
+    }
+
+    const centerName = button.getAttribute('data-center');
+    fetch(`{% url 'attachment_units_by_center' %}?center=${encodeURIComponent(centerName)}`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const unitTableBody = document.querySelector('#unit-table tbody');
+      unitTableBody.innerHTML = '';
+      if (data.units && data.units.length > 0) {
+        data.units.forEach(unit => {
+          unitTableBody.innerHTML += `
+            <tr>
+              <td>${esc(unit.ndest_units)}</td>
+              <td>${esc(unit.ndest_cnpj)}</td>
+              <td>${esc(unit.ndest_nire)}</td>
+              <td>${esc(unit.ndest_reg_state)}</td>
+              <td>${esc(unit.ndest_reg_city)}</td>
+            </tr>`;
+        });
+      } else {
+        unitTableBody.innerHTML = '<tr><td colspan="5">Nenhuma unidade encontrada.</td></tr>';
+      }
+    });
+  });
+});
+</script>
+</body>
+</html>

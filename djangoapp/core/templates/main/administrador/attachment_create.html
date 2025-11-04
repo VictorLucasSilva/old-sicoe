@@ -11,9 +11,10 @@
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/confirm-button.css' %}">
+    <script defer src="{% static 'js/confirm-button.js' %}"></script>
     <style>
-
-        .create-div-all {
+        .back-div-all {
             background-color: #FFF;
             transition: .4s;
             cursor: pointer;
@@ -26,419 +27,571 @@
             padding: 15px;
             box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
         }
+        .create-div-all {
+            background-color: #FFF;
+            transition: .4s;
+            cursor: pointer;
+            color: black;
+            height: 100%;
+            border-radius: .25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding:10px; box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+        }
+        .create-div-all .table { font-size: 1.2rem; width: 100%; table-layout: fixed; text-align: center; }
+        .create-div-all .table, .create-div-all .table td { word-wrap: break-word; vertical-align: middle; font-size: 0.85rem; }
+        .is-valid { border-color: #198754; }
+        .is-invalid { border-color: #dc3545; }
+        .date-wrapper .input-group-text{ cursor:pointer; }
 
-        .create-div-all .table {
-            font-size: 1.2rem;
-            width: 100%;
-            table-layout: fixed;
-            text-align: center;
+        .calendar-overlay {
+            position: absolute; inset: 0 auto 0 0;       
+            width: 2.75rem;                              
+            opacity: 0;                                   
+            z-index: 3;                                  
+            cursor: pointer;
+        }
+        .input-group.position-relative { position: relative; }
+        .form-control:hover,
+        .form-select:hover,
+        .form-control:active,
+        .form-select:active,
+        .form-control:focus:hover,
+        .form-select:focus:hover {
+        background-color: var(--bs-form-control-bg, #fff);
+        border-color: #cacacaff;      
+        box-shadow: none;            
         }
 
-        .create-div-all .table ,
-        .create-div-all .table td {
-            word-wrap: break-word;
-            vertical-align: middle;
-            font-size: 0.85rem;
+        .back-div-all .form-control,
+        .back-div-all .form-select,
+        .back-div-all .input-group-text,
+        .create-div-all .form-control,
+        .create-div-all .form-select,
+        .create-div-all .input-group-text {
+        cursor: auto;
         }
 
-        .is-valid {
-            border-color: #198754;
+        .input-group-text:hover,
+        .input-group-text:active {
+        background-color: var(--bs-tertiary-bg, #e9ecef);
+        border-color: var(--bs-border-color, #dee2e6);
+        box-shadow: none ;
         }
-        .is-invalid {
-            border-color: #dc3545;
+        .form-control:hover,
+        .form-select:hover,
+        .form-check-input:hover {
+        background-color: var(--bs-form-control-bg, #fff) !important;
+        box-shadow: none !important;
         }
+
+        .form-control:focus,
+        .form-select:focus,
+        .form-check-input:focus {
+        outline: none !important;
+        box-shadow: none !important;
+        }
+
+        .form-control:focus:not(.is-valid):not(.is-invalid),
+        .form-select:focus:not(.is-valid):not(.is-invalid),
+        .form-control:focus-visible:not(.is-valid):not(.is-invalid),
+        .form-select:focus-visible:not(.is-valid):not(.is-invalid) {
+        border-color: var(--bs-border-color, #dee2e6) !important; 
+        box-shadow: none !important;  
+        outline: none !important;
+        }
+
+        .form-control.is-valid:focus,
+        .form-select.is-valid:focus,
+        .form-control.is-valid:focus-visible,
+        .form-select.is-valid:focus-visible,
+        .form-control.is-invalid:focus,
+        .form-select.is-invalid:focus,
+        .form-control.is-invalid:focus-visible,
+        .form-select.is-invalid:focus-visible {
+        box-shadow: none !important;   
+        outline: none !important;      
+        }
+
+        .form-control:hover,
+        .form-select:hover,
+        .form-control:focus:hover,
+        .form-select:focus:hover {
+        background-color: var(--bs-form-control-bg, #fff) !important;
+        box-shadow: none !important;
+        }
+        /* Tom de cinza um pouco mais escuro para bordas neutras */
+:root { --pde-input-border: #b0b0b0; } /* ajuste aqui se quiser mais claro/escuro */
+
+/* Borda neutra padrão */
+.form-control,
+.form-select,
+.input-group-text {
+  border-color: var(--pde-input-border) !important;
+}
+
+/* Hover/Focus neutros mantêm o mesmo cinza e sem glow */
+.form-control:hover:not(.is-valid):not(.is-invalid),
+.form-select:hover:not(.is-valid):not(.is-invalid),
+.form-control:focus:not(.is-valid):not(.is-invalid),
+.form-select:focus:not(.is-valid):not(.is-invalid),
+.form-control:focus-visible:not(.is-valid):not(.is-invalid),
+.form-select:focus-visible:not(.is-valid):not(.is-invalid) {
+  border-color: var(--pde-input-border) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Validação continua com verde/vermelho — só sem glow */
+.form-control.is-valid:focus,
+.form-select.is-valid:focus,
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Addon do calendário seguindo o mesmo cinza */
+.input-group-text:hover,
+.input-group-text:focus {
+  border-color: var(--pde-input-border) !important;
+  box-shadow: none !important;
+}
+/* Cinza levemente mais escuro para estado neutro */
+:root { --pde-input-border: #a6a6a6; }
+
+/* 1) Borda neutra apenas quando NÃO está valid/invalid */
+.form-control:not(.is-valid):not(.is-invalid),
+.form-select:not(.is-valid):not(.is-invalid),
+.input-group-text {
+  border-color: var(--pde-input-border) !important;
+}
+
+/* 2) Preserva verde/vermelho de validação */
+.form-control.is-valid,
+.form-select.is-valid { border-color: var(--bs-success) !important; }
+
+.form-control.is-invalid,
+.form-select.is-invalid { border-color: var(--bs-danger) !important; }
+
+/* 3) Hover/Focus neutros: sem glow e mantendo o cinza */
+.form-control:focus:not(.is-valid):not(.is-invalid),
+.form-select:focus:not(.is-valid):not(.is-invalid),
+.form-control:hover:not(.is-valid):not(.is-invalid),
+.form-select:hover:not(.is-valid):not(.is-invalid) {
+  border-color: var(--pde-input-border) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* 4) Hover/Focus em validação: mantém a cor, sem glow */
+.form-control.is-valid:focus,
+.form-select.is-valid:focus,
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* 5) (Opcional) Caso use .was-validated do Bootstrap */
+.was-validated .form-control:valid,
+.was-validated .form-select:valid { border-color: var(--bs-success) !important; }
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid { border-color: var(--bs-danger) !important; }
+
     </style>
 </head>
 <body>
     <div class="wrapper">
-            <aside id="sidebar">
-                <div class="d-flex">
-                    <button class="toggle-btn" type="button">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <div class="sidebar-logo">
-                        <a href="{% url 'home' %}"></a>
-                    </div>
-                </div>
-                <ul class="sidebar-nav">
-                    <li class="sidebar-item">
-                        <a href="{% url 'home' %}" class="sidebar-link">
-                            <i class="bi bi-house"></i>
-                            <span><strong>Home</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <span><strong>Anexos</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
-                            <i class="bi bi-plus-square"></i>
-                            <span><strong>Cadastro</strong></span>
-                        </a>
-                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
-                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
-                                     Relacionamento
-                                </a>
-                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
-                                    </li>
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
-                            <i class="bi bi-person-lock"></i>
-                            <span><strong>Administração</strong></span>
-                        </a>
-                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </aside>
+        {% include "others/sidebar.html" %}
         <div class="main">
             <nav class="navbar navbar-expand px-4 py-2">
                 <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
                     <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
-                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                    <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
                 </a>
             </nav>
-              <main class="content px-3 py-4">
+
+            <main class="content px-3 py-4">
                 {% if messages %}
-                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
+                <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index:1080; width:fit-content; max-width:90%;">
                     {% for message in messages %}
-                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
                         {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                      </div>
+                    </div>
                     {% endfor %}
-                  </div>
+                </div>
                 {% endif %}
-                  <div class="container-fluid">
-                      <div class="mb-3">
-                          <div class="row">
-                              <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
-                                  <div class="breadcrumb-div py-3 border-1">
-                                      <ol class="breadcrumb my-1 mx-2 px-3">
+
+                <div class="container-fluid">
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-12 col-lg-12 col-md-12 pb-3 mt-2">
+                                <div class="breadcrumb-div py-3 border-1">
+                                    <ol class="breadcrumb my-1 mx-2 px-3">
                                         <li class="breadcrumb-item"><a href="{% url 'home' %}">Início </a></li>
                                         <li class="breadcrumb-item"><a href="{% url 'attachment_list' %}">Anexos </a></li>
                                         <li class="breadcrumb-item active" aria-current="page">Novo Anexo</li>
-                                      </ol>
-                                      <h1 class="fw-bold fs-2 mx-5 mt-3">Novo Anexo</h1>
-                                  </div>
-                              </div>
-                          </div>
-                          <div class="row">
+                                    </ol>
+                                    <h1 class="fw-bold fs-2 mx-5 mt-3">Novo Anexo</h1>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-12 col-lg-12 col-md-12">
-                              <div class="create-div-all py-5 px-5 border-1">
-                                <form method="POST" enctype="multipart/form-data" novalidate>
-                                {% csrf_token %}
+                                <div class="back-div-all py-4 px-4 border-1">
+                                    <div class="col-12 col-lg-12 col-md-12">
+                                        <div class="create-div-all py-5 px-5 border-1">
+                                            <form id="form-attachment" method="POST" enctype="multipart/form-data" novalidate>
+                                                {% csrf_token %}
 
-                                <div class="mb-4">
-                                    <label for="region-select" class="form-label"><strong>Região:</strong></label>
-                                    <select id="region-select" name="region" class="form-control">
-                                    <option value="" selected disabled>Selecione a Região</option>
-                                    <option value="Norte">Norte</option>
-                                    <option value="Nordeste">Nordeste</option>
-                                    <option value="Centro-Oeste">Centro-Oeste</option>
-                                    <option value="Sudeste">Sudeste</option>
-                                    <option value="Sul">Sul</option>
-                                    </select>
-                                    <div class="invalid-feedback">Por favor, selecione a região.</div>
+                                                <div class="mb-4">
+                                                    <label for="region-select" class="form-label"><strong>Região:</strong></label>
+                                                    <select id="region-select" name="region" class="form-control">
+                                                        <option value="" selected disabled>Selecione a Região</option>
+                                                        <option value="Norte">Norte</option>
+                                                        <option value="Nordeste">Nordeste</option>
+                                                        <option value="Centro-Oeste">Centro-Oeste</option>
+                                                        <option value="Sudeste">Sudeste</option>
+                                                        <option value="Sul">Sul</option>
+                                                    </select>
+                                                    <div class="invalid-feedback">Por favor, selecione a região.</div>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <label for="state-select" class="form-label"><strong>Estado:</strong></label>
+                                                    <select id="state-select" name="state" class="form-control">
+                                                        <option value="" selected disabled>Selecione o Estado</option>
+                                                    </select>
+                                                    <div class="invalid-feedback">Por favor, selecione o estado.</div>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <label for="center-select" class="form-label"><strong>Estabelecimento:</strong></label>
+                                                    <select id="center-select" name="center" class="form-control">
+                                                        <option value="" selected disabled>Selecione o Estabelecimento</option>
+                                                    </select>
+                                                    <div class="invalid-feedback">Por favor, selecione o estabelecimento.</div>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <label for="document-select" class="form-label"><strong>Documento:</strong></label>
+                                                    <select id="document-select" name="document" class="form-control">
+                                                        <option value="" selected disabled>Selecione o Documento</option>
+                                                    </select>
+                                                    <div class="invalid-feedback">Por favor, selecione o documento.</div>
+                                                </div>
+
+                                                <div class="mb-4 date-wrapper" id="venc-wrapper">
+                                                    <label for="data-expire" class="form-label"><strong>Data de Vencimento:</strong></label>
+                                                    <div class="input-group position-relative">
+                                                        <span class="input-group-text" id="icon-cal" role="button" aria-label="Abrir calendário" tabindex="0">
+                                                            <i class="bi bi-calendar3"></i>
+                                                        </span>
+
+                                                        <input type="date" id="native-date" class="calendar-overlay" aria-label="Calendário nativo">
+
+                                                        <input
+                                                            type="text"
+                                                            name="data_expire"
+                                                            id="data-expire"
+                                                            class="form-control date-br"
+                                                            inputmode="numeric"
+                                                            autocomplete="off"
+                                                            placeholder="DD/MM/AAAA"
+                                                            maxlength="10"
+                                                            data-role="datebr"
+                                                            aria-describedby="icon-cal"
+                                                        >
+                                                    </div>
+                                                    <div class="invalid-feedback">Por favor, informe a data de vencimento.</div>
+                                                </div>
+
+                                                <div class="mb-5">
+                                                    <label for="file-upload" class="form-label"><strong>Anexo:</strong></label>
+                                                    <input type="file" name="file" id="file-upload" class="form-control" accept="application/pdf,.pdf">
+                                                    <div class="invalid-feedback">Por favor, selecione o arquivo PDF para anexar.</div>
+                                                </div>
+
+                                                <button type="button" id="btnAbrirModalSalvar" class="btn btn-primary">Salvar</button>
+                                                <a href="{% url 'attachment_list' %}" class="btn btn-secondary">Voltar</a>
+                                            </form>
+                                        </div>
+                                    </div>
                                 </div>
-
-                                <div class="mb-4">
-                                    <label for="state-select" class="form-label"><strong>Estado:</strong></label>
-                                    <select id="state-select" name="state" class="form-control">
-                                    <option value="" selected disabled>Selecione o Estado</option>
-                                    </select>
-                                    <div class="invalid-feedback">Por favor, selecione o estado.</div>
-                                </div>
-
-                                <div class="mb-4">
-                                    <label for="center-select" class="form-label"><strong>Estabelecimento:</strong></label>
-                                    <select id="center-select" name="center" class="form-control">
-                                    <option value="" selected disabled>Selecione o Estabelecimento</option>
-                                    </select>
-                                    <div class="invalid-feedback">Por favor, selecione o estabelecimento.</div>
-                                </div>
-
-                                <div class="mb-4">
-                                    <label for="document-select" class="form-label"><strong>Documento:</strong></label>
-                                    <select id="document-select" name="document" class="form-control">
-                                    <option value="" selected disabled>Selecione o Documento</option>
-                                    </select>
-                                    <div class="invalid-feedback">Por favor, selecione o documento.</div>
-                                </div>
-
-                                <div class="mb-4">
-                                    <label for="data-expire" class="form-label"><strong>Data de Vencimento:</strong></label>
-                                    <input type="date" name="data_expire" id="data-expire" class="form-control">
-                                    <div class="invalid-feedback">Por favor, informe a data de vencimento.</div>
-                                </div>
-
-                                <div class="mb-5">
-                                    <label for="file-upload" class="form-label"><strong>Anexo:</strong></label>
-                                    <input type="file" name="file" id="file-upload" class="form-control" accept="application/pdf,.pdf">
-                                    <div class="invalid-feedback">Por favor, selecione o arquivo PDF para anexar.</div>
-                                </div>
-
-                                <button type="button" id="btnAbrirModalSalvar" class="btn btn-primary">Salvar</button>
-                                <a href="{% url 'attachment_list' %}" class="btn btn-secondary">Voltar</a>
-                                </form>
-                              </div>
                             </div>
-                          </div>
-                      </div>
-                  </div>
-              </main>
-                <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1" aria-labelledby="modalConfirmarSalvarLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-md mt-5 d-flex justify-content-center">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="modalConfirmarSalvarLabel">Confirmar envio</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                            </div>
-                            <div class="modal-body">
-                                Deseja realmente salvar este anexo?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="button" id="btnConfirmarSalvar" class="btn btn-primary">
-                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinnerSalvar"></span>
-                                <span id="btnTextSalvar">Confirmar</span>
-                                </button>
-                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
+
+            <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1" aria-labelledby="modalConfirmarSalvarLabel" aria-hidden="true">
+                <div class="modal-dialog modal-md mt-5 d-flex justify-content-center">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalConfirmarSalvarLabel">Confirmar envio</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body">Deseja realmente salvar este anexo?</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            {% include 'others/confirm_submit_button.html' with id='btnConfirmarSalvar' target_form='#form-attachment' label='Confirmar' %}
                         </div>
                     </div>
                 </div>
-                <footer class="footer d-flex justify-content-center align-items-center">
-                    <div class="container-fluid">
-                        <div class="row text-body-secondary align-items-center justify-content-center">
-                            <div class="col-6 text-center pt-2">
-                                <a class="text-body-secondary" href="#">
-                                    <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
             </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-            crossorigin="anonymous"></script>
-        <script src="{% static 'js/script.js' %}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
             const msgContainer = document.getElementById('msg-container');
             if (msgContainer) {
                 setTimeout(() => {
-                [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
-                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                    bsAlert.close();
-                });
+                    [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                        bsAlert.close();
+                    });
                 }, 8000);
             }
-            });
-            const form = document.querySelector('form');
-            const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
-            const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
-            const spinner = document.getElementById('spinnerSalvar');
-            const btnText = document.getElementById('btnTextSalvar');
+        });
 
-            const region = document.getElementById('region-select');
-            const state = document.getElementById('state-select');
-            const center = document.getElementById('center-select');
-            const documentField = document.getElementById('document-select');
-            const dataExpire = document.getElementById('data-expire');
-            const file = document.getElementById('file-upload');
+        const form = document.querySelector('form');
+        const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
+        const region = document.getElementById('region-select');
+        const state = document.getElementById('state-select');
+        const center = document.getElementById('center-select');
+        const documentField = document.getElementById('document-select');
+        const dataExpire = document.getElementById('data-expire');  
+        const nativeDate = document.getElementById('native-date'); 
+        const file = document.getElementById('file-upload');
 
-            form.addEventListener('keydown', e => {
-                if (e.key === 'Enter') e.preventDefault();
-            });
+        form.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
 
-            function validarCampo(campo) {
-                const feedback = campo.parentElement.querySelector('.invalid-feedback');
-                let isValid = false;
+        function parseDateBrToDate(v) {
+            if(!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return null;
+            const [d,m,y] = v.split('/').map(Number);
+            const dt = new Date(y, m-1, d, 0,0,0,0);
+            if(dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d) return null;
+            return dt;
+        }
 
-                if (campo.type === 'file') {
-                    const fileValue = campo.files[0];
-                    isValid = fileValue && fileValue.name.toLowerCase().endsWith('.pdf');
-                    if (!isValid && feedback) feedback.textContent = 'Somente arquivos PDF são permitidos.';
-                } 
-                else if (campo.type === 'date') {
-                    const today = new Date();
-                    const selectedDate = new Date(campo.value);
-                    selectedDate.setHours(0, 0, 0, 0);
-                    today.setHours(0, 0, 0, 0);
-                    isValid = campo.value && selectedDate >= today;
-                    if (!isValid && feedback) feedback.textContent = 'Informe uma data de vencimento válida (hoje ou futura).';
-                } 
-                else {
-                    isValid = campo.value && campo.value.trim() !== "";
+        function validarCampo(campo) {
+            const feedback = campo.closest('.mb-4')?.querySelector('.invalid-feedback') || campo.parentElement.querySelector('.invalid-feedback');
+            let isValid = false;
+
+            if (campo.type === 'file') {
+                const fileValue = campo.files[0];
+                isValid = fileValue && fileValue.name.toLowerCase().endsWith('.pdf');
+                if (!isValid && feedback) feedback.textContent = 'Somente arquivos PDF são permitidos.';
+            } else if (campo.dataset.role === 'datebr') {
+                const today = new Date(); today.setHours(0,0,0,0);
+                const dt = parseDateBrToDate(campo.value);
+                isValid = !!dt && dt >= today;
+                if (!isValid && feedback) feedback.textContent = 'Informe uma data no formato DD/MM/AAAA (hoje ou futura).';
+            } else {
+                isValid = campo.value && campo.value.trim() !== "";
+            }
+
+            if (isValid) {
+                campo.classList.remove('is-invalid'); campo.classList.add('is-valid');
+                if (feedback) feedback.style.display = 'none';
+            } else {
+                campo.classList.add('is-invalid'); campo.classList.remove('is-valid');
+                if (feedback) feedback.style.display = 'block';
+            }
+            return isValid;
+        }
+
+        btnAbrirModal.addEventListener('click', function () {
+            const validacoes = [
+                validarCampo(region),
+                validarCampo(state),
+                validarCampo(center),
+                validarCampo(documentField),
+                validarCampo(dataExpire),
+                validarCampo(file)
+            ];
+            if (validacoes.every(v => v)) {
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmarSalvar'));
+                modal.show();
+            }
+        });
+
+
+        [region, state, center, documentField, dataExpire, file].forEach(campo => {
+            campo.addEventListener('input', () => validarCampo(campo));
+            campo.addEventListener('change', () => validarCampo(campo));
+        });
+    </script>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                let cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
 
-                if (isValid) {
-                    campo.classList.remove('is-invalid');
-                    campo.classList.add('is-valid');
-                    if (feedback) feedback.style.display = 'none';
-                } else {
-                    campo.classList.add('is-invalid');
-                    campo.classList.remove('is-valid');
-                    if (feedback) feedback.style.display = 'block';
-                }
+        document.getElementById('region-select').addEventListener('change', function() {
+            const region = this.value;
+            fetch(`/administrador/anexo/cadastrar/?region=${encodeURIComponent(region)}`, { headers: { "X-CSRFToken": csrftoken } })
+            .then(response => { if (!response.ok) throw new Error("Erro ao buscar estados."); return response.json(); })
+            .then(data => {
+                const stateSelect = document.getElementById('state-select');
+                stateSelect.innerHTML = '<option value="" selected disabled>Selecione o Estado</option>';
+                data.states.forEach(state => { stateSelect.innerHTML += `<option value="${state}">${state}</option>`; });
+                document.getElementById('center-select').innerHTML = '<option value="" selected disabled>Selecione o Estabelecimento</option>';
+                document.getElementById('document-select').innerHTML = '<option value="" selected disabled>Selecione o Documento</option>';
+            })
+            .catch(err => { console.error("Erro:", err); alert("Falha ao carregar estados. Tente novamente."); });
+        });
 
-                return isValid;
-                }
+        document.getElementById('state-select').addEventListener('change', function() {
+            const state = this.value;
+            const region = document.getElementById('region-select').value;
+            fetch(`/administrador/anexo/cadastrar/?region=${encodeURIComponent(region)}&state=${encodeURIComponent(state)}`, { headers: { "X-CSRFToken": csrftoken } })
+            .then(response => { if (!response.ok) throw new Error("Erro ao buscar estabelecimentos."); return response.json(); })
+            .then(data => {
+                const centerSelect = document.getElementById('center-select');
+                centerSelect.innerHTML = '<option value="" selected disabled>Selecione o Estabelecimento</option>';
+                data.centers.forEach(center => { centerSelect.innerHTML += `<option value="${center}">${center}</option>`; });
+                document.getElementById('document-select').innerHTML = '<option value="" selected disabled>Selecione o Documento</option>';
+            })
+            .catch(err => { console.error("Erro:", err); alert("Falha ao carregar estabelecimentos. Tente novamente."); });
+        });
 
-            btnAbrirModal.addEventListener('click', function () {
-                const validacoes = [
-                    validarCampo(region),
-                    validarCampo(state),
-                    validarCampo(center),
-                    validarCampo(documentField),
-                    validarCampo(dataExpire),
-                    validarCampo(file)
-                ];
+        document.getElementById('center-select').addEventListener('change', function() {
+            const center = this.value;
+            const region = document.getElementById('region-select').value;
+            const state = document.getElementById('state-select').value;
+            fetch(`/administrador/anexo/cadastrar/?region=${encodeURIComponent(region)}&state=${encodeURIComponent(state)}&center=${encodeURIComponent(center)}`, { headers: { "X-CSRFToken": csrftoken } })
+            .then(response => { if (!response.ok) throw new Error("Erro ao buscar documentos."); return response.json(); })
+            .then(data => {
+                const documentSelect = document.getElementById('document-select');
+                documentSelect.innerHTML = '<option value="" selected disabled>Selecione o Documento</option>';
+                data.documents.forEach(doc => { documentSelect.innerHTML += `<option value="${doc}">${doc}</option>`; });
+            })
+            .catch(err => { console.error("Erro:", err); alert("Falha ao carregar documentos. Tente novamente."); });
+        });
+    </script>
 
-                if (validacoes.every(v => v)) {
-                    const modal = new bootstrap.Modal(document.getElementById('modalConfirmarSalvar'));
-                    modal.show();
-                }
-            });
+    <script>
+    (function(){
+        const input = document.getElementById('data-expire');    
+        const nativeDate = document.getElementById('native-date');
 
-            btnConfirmarSalvar.addEventListener('click', function () {
-                btnConfirmarSalvar.disabled = true;
-                btnText.classList.add('d-none');
-                spinner.classList.remove('d-none');
-                form.submit();
-            });
+        // --- Utilidades ---
+        const pad2 = n => String(n).padStart(2,'0');
+        const formatDateBr = (d) => `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+        function today0(){ const t = new Date(); t.setHours(0,0,0,0); return t; }
 
-            [region, state, center, documentField, dataExpire, file].forEach(campo => {
-                campo.addEventListener('input', () => validarCampo(campo));
-                campo.addEventListener('change', () => validarCampo(campo));
-            });
-        </script>
-        <script>
-          function getCookie(name) {
-              let cookieValue = null;
-              if (document.cookie && document.cookie !== '') {
-                  let cookies = document.cookie.split(';');
-                  for (let i = 0; i < cookies.length; i++) {
-                      let cookie = cookies[i].trim();
-                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                          break;
-                      }
-                  }
-              }
-              return cookieValue;
-          }
-          const csrftoken = getCookie('csrftoken');
+        function parseDateBrToDate(v){
+            if(!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return null;
+            const [d,m,y] = v.split('/').map(Number);
+            const dt = new Date(y, m-1, d, 0,0,0,0);
+            if(dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d) return null;
+            return dt;
+        }
+        function toNativeISO(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
 
-          document.getElementById('region-select').addEventListener('change', function() {
-              const region = this.value;
-              fetch(`/administrador/anexo/cadastrar/?region=${encodeURIComponent(region)}`, {
-                  headers: { "X-CSRFToken": csrftoken }
-              })
-              .then(response => {
-                  if (!response.ok) throw new Error("Erro ao buscar estados.");
-                  return response.json();
-              })
-              .then(data => {
-                  console.log("Recebeu states:", JSON.stringify(data));
-                  const stateSelect = document.getElementById('state-select');
-                  stateSelect.innerHTML = '<option value="" selected disabled>Selecione o Estado</option>';
-                  data.states.forEach(state => {
-                      stateSelect.innerHTML += `<option value="${state}">${state}</option>`;
-                  });
-                  document.getElementById('center-select').innerHTML = '<option value="" selected disabled>Selecione o Estabelecimento</option>';
-                  document.getElementById('document-select').innerHTML = '<option value="" selected disabled>Selecione o Documento</option>';
-              })
-              .catch(err => {
-                  console.error("Erro:", err);
-                  alert("Falha ao carregar estados. Tente novamente.");
-              });
-          });
+        nativeDate.min = toNativeISO(today0());
 
-          document.getElementById('state-select').addEventListener('change', function() {
-              const state = this.value;
-              const region = document.getElementById('region-select').value;
-              fetch(`/administrador/anexo/cadastrar/?region=${encodeURIComponent(region)}&state=${encodeURIComponent(state)}`, {
-                  headers: { "X-CSRFToken": csrftoken }
-              })
-              .then(response => {
-                  if (!response.ok) throw new Error("Erro ao buscar estabelecimentos.");
-                  return response.json();
-              })
-              .then(data => {
-                  console.log("Recebeu centers:", JSON.stringify(data));
-                  const centerSelect = document.getElementById('center-select');
-                  centerSelect.innerHTML = '<option value="" selected disabled>Selecione o Estabelecimento</option>';
-                  data.centers.forEach(center => {
-                      centerSelect.innerHTML += `<option value="${center}">${center}</option>`;
-                  });
-                  document.getElementById('document-select').innerHTML = '<option value="" selected disabled>Selecione o Documento</option>';
-              })
-              .catch(err => {
-                  console.error("Erro:", err);
-                  alert("Falha ao carregar estabelecimentos. Tente novamente.");
-              });
-          });
+        function mapRawIndexToFormatted(rawIdx){ let pos = rawIdx; if (pos > 2) pos += 1; if (pos > 4) pos += 1; return pos; }
+        function formatFrom(value, caret){
+            const raw = value.replace(/\D/g, '').slice(0, 8);
+            const rawBefore = value.slice(0, (caret ?? value.length)).replace(/\D/g, '').length;
 
-          document.getElementById('center-select').addEventListener('change', function() {
-              const center = this.value;
-              const region = document.getElementById('region-select').value;
-              const state = document.getElementById('state-select').value;
-              fetch(`/administrador/anexo/cadastrar/?region=${encodeURIComponent(region)}&state=${encodeURIComponent(state)}&center=${encodeURIComponent(center)}`, {
-                  headers: { "X-CSRFToken": csrftoken }
-              })
-              .then(response => {
-                  if (!response.ok) throw new Error("Erro ao buscar documentos.");
-                  return response.json();
-              })
-              .then(data => {
-                  console.log("Recebeu documents:", JSON.stringify(data));
-                  const documentSelect = document.getElementById('document-select');
-                  documentSelect.innerHTML = '<option value="" selected disabled>Selecione o Documento</option>';
-                  data.documents.forEach(doc => {
-                      documentSelect.innerHTML += `<option value="${doc}">${doc}</option>`;
-                  });
-              })
-              .catch(err => {
-                  console.error("Erro:", err);
-                  alert("Falha ao carregar documentos. Tente novamente.");
-              });
-          });
-        </script>
-    </body>
+            let formatted = '';
+            if (raw.length <= 2) formatted = raw;
+            else if (raw.length <= 4) formatted = raw.slice(0,2) + '/' + raw.slice(2);
+            else formatted = raw.slice(0,2) + '/' + raw.slice(2,4) + '/' + raw.slice(4);
+
+            let newCaret = mapRawIndexToFormatted(rawBefore);
+            if (newCaret > formatted.length) newCaret = formatted.length;
+            return { formatted, newCaret };
+        }
+
+        input.addEventListener('keydown', (ev) => {
+            const allowedNav = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'];
+            const val = input.value;
+            const pos = input.selectionStart ?? 0;
+
+            if (ev.key === 'Backspace' && pos > 0 && val[pos-1] === '/') { ev.preventDefault(); input.setSelectionRange(pos-1, pos-1); return; }
+            if (ev.key === 'Delete' && val[pos] === '/') { ev.preventDefault(); input.setSelectionRange(pos+1, pos+1); return; }
+
+            if (allowedNav.includes(ev.key)) return;
+            if (/^\d$/.test(ev.key)) return;
+            if (ev.ctrlKey || ev.metaKey) return;
+            ev.preventDefault();
+        });
+
+        function onInputMask() {
+            const caret = input.selectionStart ?? input.value.length;
+            const { formatted, newCaret } = formatFrom(input.value, caret);
+            input.value = formatted;
+            try { input.setSelectionRange(newCaret, newCaret); } catch(_) {}
+            try { validarCampo(input); } catch(_) {}
+        }
+        input.addEventListener('input', onInputMask);
+
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const txt = (e.clipboardData || window.clipboardData).getData('text') || '';
+            const raw = txt.replace(/\D/g, '').slice(0,8);
+            let formatted = '';
+            if (raw.length <= 2) formatted = raw;
+            else if (raw.length <= 4) formatted = raw.slice(0,2) + '/' + raw.slice(2);
+            else formatted = raw.slice(0,2) + '/' + raw.slice(2,4) + '/' + raw.slice(4);
+            input.value = formatted;
+            const end = input.value.length;
+            try { input.setSelectionRange(end, end); } catch(_) {}
+            try { validarCampo(input); } catch(_) {}
+            syncMaskedToNative(); 
+        });
+
+        nativeDate.addEventListener('change', () => {
+            if (!nativeDate.value) return;
+            const [y,m,d] = nativeDate.value.split('-').map(Number);
+            const picked = new Date(y, m-1, d, 0,0,0,0);
+            input.value = formatDateBr(picked);
+            try { validarCampo(input); } catch(_) {}
+        });
+
+        document.getElementById('venc-wrapper').addEventListener('click', (e) => {
+            if (e.target === input) return;
+            if (typeof nativeDate.showPicker === 'function') nativeDate.showPicker();
+            else { nativeDate.focus(); nativeDate.click(); }
+        });
+
+        function syncMaskedToNative(){
+            const dt = parseDateBrToDate(input.value);
+            if (dt) nativeDate.value = toNativeISO(dt);
+            else nativeDate.value = '';
+        }
+        input.addEventListener('blur', () => setTimeout(() => { try { validarCampo(input); } catch(_) {} syncMaskedToNative(); }, 50));
+
+        syncMaskedToNative();
+    })();
+    </script>
+</body>
 </html>
-

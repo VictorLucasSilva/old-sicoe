@@ -44,83 +44,12 @@
 </head>
 <body>
     <div class="wrapper">
-        <aside id="sidebar">
-            <div class="d-flex">
-                <button class="toggle-btn" type="button">
-                    <i class="bi bi-list"></i>
-                </button>
-                <div class="sidebar-logo">
-                    <a href="{% url 'home' %}"></a>
-                </div>
-            </div>
-            <ul class="sidebar-nav">
-                <li class="sidebar-item">
-                    <a href="{% url 'home' %}" class="sidebar-link">
-                        <i class="bi bi-house"></i>
-                        <span><strong>Home</strong></span>
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="{% url 'attachment_list' %}" class="sidebar-link">
-                        <i class="bi bi-file-earmark-text"></i>
-                        <span><strong>Anexos</strong></span>
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                        data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
-                        <i class="bi bi-plus-square"></i>
-                        <span><strong>Cadastro</strong></span>
-                    </a>
-                    <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                        <li class="sidebar-item">
-                            <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
-                                data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
-                                 Relacionamento
-                            </a>
-                            <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
-                                <li class="sidebar-item">
-                                    <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
-                                </li>
-                                <li class="sidebar-item">
-                                    <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                        data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
-                        <i class="bi bi-person-lock"></i>
-                        <span><strong>Administração</strong></span>
-                    </a>
-                    <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                        <li class="sidebar-item">
-                            <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </aside>
-
+        {% include "others/sidebar.html" %}
         <div class="main">
             <nav class="navbar navbar-expand px-4 py-2">
                 <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
                     <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
-                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                    <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
                 </a>
             </nav>
 
@@ -154,27 +83,31 @@
 
                         <div class="row">
                             <div class="col-12 col-lg-12 col-md-12">
-                                <div class="create-div-document py-5 px-5 border-1">
-                                    <form method="POST">
-                                        {% csrf_token %}
+                                <div class="create-div-document py-4 px-4 border-1">
+                                    <div class="col-12 col-lg-12 col-md-12">
+                                        <div class="create-div-document py-5 px-5 border-1">
+                                            <form method="POST">
+                                                {% csrf_token %}
 
-                                        <div class="mb-5">
-                                            <label for="{{ form.d_doc.id_for_label }}" class="form-label mb-2">
-                                                <strong>Nome do Documento</strong>
-                                            </label>
-                                            {{ form.d_doc }}
-                                            {% if form.d_doc.errors %}
-                                            <div class="text-danger mt-2">
-                                                {% for error in form.d_doc.errors %}
-                                                    {{ error }}
-                                                {% endfor %}
-                                            </div>
-                                            {% endif %}
+                                                <div class="mb-5">
+                                                    <label for="{{ form.d_doc.id_for_label }}" class="form-label mb-2">
+                                                        <strong>Nome do Documento</strong>
+                                                    </label>
+                                                    {{ form.d_doc }}
+                                                    {% if form.d_doc.errors %}
+                                                    <div class="text-danger mt-2">
+                                                        {% for error in form.d_doc.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+
+                                                <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
+                                                <a href="{% url 'document_list' %}" class="btn btn-secondary">Voltar</a>
+                                            </form>
                                         </div>
-
-                                        <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
-                                        <a href="{% url 'document_list' %}" class="btn btn-secondary">Voltar</a>
-                                    </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -194,60 +127,66 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-danger" id="btnConfirmarSalvar">Confirmar</button>
+                            <button type="button" class="btn btn-primary" id="btnConfirmarSalvar">
+                                <span class="btn-text">Confirmar</span>
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <footer class="footer d-flex justify-content-center align-items-center">
-                <div class="container-fluid">
-                    <div class="row text-body-secondary align-items-center justify-content-center">
-                        <div class="col-6 text-center pt-2">
-                            <a class="text-body-secondary" href="#">
-                                <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </footer>
         </div>
     </div>
 
-   <script nonce="{{ csp_nonce }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpc8Qyq46cDfL"
-            crossorigin="anonymous"></script>
-    <script nonce="{{ csp_nonce }}" src="{% static 'js/script.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script src="{% static 'js/script.js' %}"></script>
 
-    <script nonce="{{ csp_nonce }}">
-        document.addEventListener('DOMContentLoaded', function () {
-            const msgContainer = document.getElementById('msg-container');
-            if (msgContainer) {
-                setTimeout(() => {
-                    [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
-                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                        bsAlert.close();
-                    });
-                }, 5000);
-            }
-
-            const form = document.querySelector('form');
-            form.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter') event.preventDefault();
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const msgContainer = document.getElementById('msg-container');
+    if (msgContainer) {
+        setTimeout(() => {
+            [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+                const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
             });
+        }, 5000);
+    }
 
-            const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
-            const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+    const form = document.querySelector('form');
+    form.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    });
 
-            btnAbrirModal.addEventListener('click', function () {
-                const modal = new bootstrap.Modal(document.getElementById('modalConfirmarSalvar'));
-                modal.show();
-            });
+    const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
+    const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
 
-            btnConfirmarSalvar.addEventListener('click', function () {
-                form.submit();
-            });
-        });
-    </script>
+    btnAbrirModal.addEventListener('click', function () {
+        const modal = new bootstrap.Modal(document.getElementById('modalConfirmarSalvar'));
+        modal.show();
+    });
+
+    const btnConfirmarSpinner = btnConfirmarSalvar.querySelector('.spinner-border');
+    const btnConfirmarText = btnConfirmarSalvar.querySelector('.btn-text');
+
+    let = locked = false;
+    btnConfirmarSalvar.addEventListener('click', function () {
+        if (locked) return;
+        locked = true;
+
+        btnConfirmarSalvar.setAttribute('disabled', 'disabled');
+        btnAbrirModal.setAttribute('disabled', 'disabled');
+
+        btnConfirmarSpinner.classList.remove('d-none');
+        btnConfirmarText.textContent = '';
+
+        form.submit();
+    });
+});
+</script>
 </body>
 </html>

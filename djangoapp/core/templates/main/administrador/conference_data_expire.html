@@ -40,86 +40,24 @@
             vertical-align: middle;
             font-size: 0.85rem;
         }
+        .date-wrapper .input-group-text{ cursor:pointer; }
+        .calendar-overlay{
+        position:absolute; inset:0 auto 0 0;
+        width:2.75rem; opacity:0; z-index:3; cursor:pointer;
+        }
+        .input-group.position-relative{ position:relative; }
+        .is-valid{ border-color:#198754; }
+        .is-invalid{ border-color:#dc3545; }
     </style>
 </head>
 <body>
     <div class="wrapper">
-            <aside id="sidebar">
-                <div class="d-flex">
-                    <button class="toggle-btn" type="button">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <div class="sidebar-logo">
-                        <a href="{% url 'home' %}"></a>
-                    </div>
-                </div>
-                <ul class="sidebar-nav">
-                    <li class="sidebar-item">
-                        <a href="{% url 'home' %}" class="sidebar-link">
-                            <i class="bi bi-house"></i>
-                            <span><strong>Home</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <span><strong>Anexos</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
-                            <i class="bi bi-plus-square"></i>
-                            <span><strong>Cadastro</strong></span>
-                        </a>
-                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
-                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
-                                     Relacionamento
-                                </a>
-                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
-                                    </li>
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
-                            <i class="bi bi-person-lock"></i>
-                            <span><strong>Administração</strong></span>
-                        </a>
-                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </aside>
+        {% include "others/sidebar.html" %}
         <div class="main">
             <nav class="navbar navbar-expand px-4 py-2">
                 <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
                     <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
-                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                    <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
                 </a>
             </nav>
               <main class="content px-3 py-4">
@@ -164,19 +102,46 @@
                                     <input type="text" name="doc" id="doc" class="form-control" value="{{ attachment_l.att_doc }}" disabled>
                                   </div>
 
-                                    <div class="mb-5">
-                                        <label for="{{ form.att_data_expire.id_for_label }}" class="form-label mb-2"><strong>Data de Saída:</strong></label>
-                                        {{ form.att_data_expire }}
-                                        {% if form.att_data_expire.errors %}
-                                            <div class="text-danger small mt-1">
-                                                {% for error in form.att_data_expire.errors %}
-                                                    {{ error }}
-                                                {% endfor %}
-                                            </div>
-                                        {% endif %}
-                                    </div>
+                                <div class="mb-5 date-wrapper" id="dt-expire-wrapper">
+                                    <label for="dt-expire-mask" class="form-label mb-2">
+                                        <strong>Data de Saída:</strong>
+                                    </label>
 
-                                  <button type="submit" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
+                                    <div class="input-group position-relative">
+                                        <span class="input-group-text" id="icon-cal-expire" role="button" aria-label="Abrir calendário" tabindex="0">
+                                        <i class="bi bi-calendar3"></i>
+                                        </span>
+                                        <input type="date" id="dt-expire-native" class="calendar-overlay" aria-label="Calendário nativo">
+                                        <input
+                                        type="text"
+                                        id="dt-expire-mask"
+                                        class="form-control date-br"
+                                        inputmode="numeric"
+                                        autocomplete="off"
+                                        placeholder="DD/MM/AAAA"
+                                        maxlength="10"
+                                        aria-describedby="icon-cal-expire"
+                                        >
+                                    </div>
+                                    <input
+                                        type="hidden"
+                                        name="{{ form.att_data_expire.name }}"
+                                        id="att_data_expire_hidden"
+                                        value="{{ attachment_l.att_data_expire|date:'Y-m-d' }}"
+                                    >
+
+                                <div class="invalid-feedback">Informe uma data no formato DD/MM/AAAA (hoje ou futura).</div>
+
+                                {% if form.att_data_expire.errors %}
+                                    <div class="text-danger small mt-1">
+                                    {% for error in form.att_data_expire.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                    </div>
+                                {% endif %}
+                                </div>
+
+                                  <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
                                   <a href="{% url 'attachment_conference' %}" class="btn btn-secondary">Voltar</a>
                                 </form>
                               </div>
@@ -189,7 +154,7 @@
                 <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1" aria-labelledby="modalConfirmarSalvarLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <div class="modal-header bg-primary text-white">
+                            <div class="modal-header text-black">
                                 <h5 class="modal-title" id="modalConfirmarSalvarLabel">Confirmar Alteração</h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                             </div>
@@ -199,25 +164,13 @@
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                 <button type="button" class="btn btn-primary" id="btnConfirmarSalvar">
-                                    Confirmar
+                                    <span class="btn-text">Confirmar</span>
                                     <span id="loading-spinner-salvar" class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true" style="display:none;"></span>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <footer class="footer d-flex justify-content-center align-items-center">
-                    <div class="container-fluid">
-                        <div class="row text-body-secondary align-items-center justify-content-center">
-                            <div class="col-6 text-center pt-2">
-                                <a class="text-body-secondary" href="#">
-                                    <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
             </div>
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
@@ -245,11 +198,6 @@
                     new bootstrap.Modal(document.getElementById('modalConfirmarSalvar')).show();
                 });
 
-                btnConfirmarSalvar.addEventListener('click', function () {
-                    spinnerSalvar.style.display = 'inline-block';
-                    form.submit();
-                });
-
                 function validateField(field, errorElement, messageEmpty) {
                     let value = field.value.trim();
                     if (!value) {
@@ -273,15 +221,144 @@
                         validateField(rcd_fk_document, rcd_fk_document_error, "O campo Documento é obrigatório.");
                     });
                 }
-
-                $('.datepicker').datepicker({
-                    format: 'dd/mm/yyyy',
-                    language: 'pt-BR',
-                    autoclose: true,
-                    todayHighlight: true,
-                    clearBtn: true
-                });
             });
+        </script>
+        <script>
+            (function(){
+            const mask    = document.getElementById('dt-expire-mask');
+            const native  = document.getElementById('dt-expire-native');
+            const hidden  = document.getElementById('att_data_expire_hidden');
+            const wrapper = document.getElementById('dt-expire-wrapper');
+            const feedback = wrapper.querySelector('.invalid-feedback');
+
+            const pad2 = n => String(n).padStart(2,'0');
+            const today0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+            const toISO = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+            const toBR  = d => `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+
+            function parseBR(v){
+                if(!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return null;
+                const [dd,mm,yy] = v.split('/').map(Number);
+                const dt = new Date(yy, mm-1, dd, 0,0,0,0);
+                if (dt.getFullYear()!==yy || dt.getMonth()!==mm-1 || dt.getDate()!==dd) return null;
+                return dt;
+            }
+
+            native.min = toISO(today0());
+
+            function mapRawIndexToFormatted(rawIdx){ let p = rawIdx; if(p>2) p+=1; if(p>4) p+=1; return p; }
+            function formatFrom(value, caret){
+                const raw = value.replace(/\D/g,'').slice(0,8);
+                const rawBefore = value.slice(0,(caret ?? value.length)).replace(/\D/g,'').length;
+                let formatted = '';
+                if(raw.length<=2) formatted=raw;
+                else if(raw.length<=4) formatted = raw.slice(0,2)+'/'+raw.slice(2);
+                else formatted = raw.slice(0,2)+'/'+raw.slice(2,4)+'/'+raw.slice(4);
+                let newCaret = mapRawIndexToFormatted(rawBefore);
+                if(newCaret>formatted.length) newCaret=formatted.length;
+                return {formatted,newCaret};
+            }
+
+            mask.addEventListener('keydown', (ev)=>{
+                const val = mask.value;
+                const pos = mask.selectionStart ?? 0;
+                const nav = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'];
+                if (ev.key==='Backspace' && pos>0 && val[pos-1]==='/'){ ev.preventDefault(); mask.setSelectionRange(pos-1,pos-1); return; }
+                if (ev.key==='Delete' && val[pos]==='/'){ ev.preventDefault(); mask.setSelectionRange(pos+1,pos+1); return; }
+                if (nav.includes(ev.key) || /^\d$/.test(ev.key) || ev.ctrlKey || ev.metaKey) return;
+                ev.preventDefault();
+            });
+
+            function applyMask(){
+                const caret = mask.selectionStart ?? mask.value.length;
+                const {formatted,newCaret} = formatFrom(mask.value, caret);
+                mask.value = formatted;
+                try{ mask.setSelectionRange(newCaret,newCaret); }catch(_){}
+                validateAndSync();
+            }
+            mask.addEventListener('input', applyMask);
+
+            mask.addEventListener('paste', (e)=>{
+                e.preventDefault();
+                const txt = (e.clipboardData||window.clipboardData).getData('text') || '';
+                const raw = txt.replace(/\D/g,'').slice(0,8);
+                let f = '';
+                if(raw.length<=2) f=raw;
+                else if(raw.length<=4) f = raw.slice(0,2)+'/'+raw.slice(2);
+                else f = raw.slice(0,2)+'/'+raw.slice(2,4)+'/'+raw.slice(4);
+                mask.value = f;
+                const end = mask.value.length;
+                try{ mask.setSelectionRange(end,end); }catch(_){}
+                validateAndSync();
+            });
+
+            native.addEventListener('change', ()=>{
+                if(!native.value) return;
+                const [y,m,d] = native.value.split('-').map(Number);
+                const picked = new Date(y, m-1, d, 0,0,0,0);
+                mask.value = toBR(picked);
+                validateAndSync();
+            });
+
+            function openPicker(){
+                if (typeof native.showPicker === 'function') native.showPicker();
+                else { native.focus(); native.click(); }
+            }
+            wrapper.addEventListener('click', (e)=>{
+                if (e.target === mask) return;
+                openPicker();
+            });
+            document.getElementById('icon-cal-expire').addEventListener('click', openPicker);
+
+            function validateAndSync(){
+                const dt = parseBR(mask.value);
+                const ok = !!dt && dt >= today0();
+                if (ok){
+                hidden.value = toISO(dt);
+                mask.classList.add('is-valid');
+                mask.classList.remove('is-invalid');
+                feedback.style.display = 'none';
+                }else{
+                hidden.value = '';
+                mask.classList.add('is-invalid');
+                mask.classList.remove('is-valid');
+                feedback.style.display = 'block';
+                }
+                return ok;
+            }
+
+            (function init(){
+                if (hidden.value){
+                const [y,m,d] = hidden.value.split('-').map(Number);
+                const dt = new Date(y, m-1, d, 0,0,0,0);
+                native.value = hidden.value;
+                mask.value = toBR(dt);
+                }
+                validateAndSync();
+            })();
+
+            const form = document.getElementById('formDtExpire');
+            const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+            const spinnerSalvar = document.getElementById('loading-spinner-salvar');
+            const btnConfirmarText = btnConfirmarSalvar.querySelector('.btn-text');
+            let = locked = false;
+
+            if (btnConfirmarSalvar){
+                btnConfirmarSalvar.addEventListener('click', function(){
+                if (locked) return;
+                    locked = true;
+
+                btnConfirmarText.textContent = '';
+                const ok = validateAndSync();
+                if (!ok){
+                    if (spinnerSalvar) spinnerSalvar.style.display = 'none';
+                    return;
+                }
+                if (spinnerSalvar) spinnerSalvar.style.display = 'inline-block';
+                form.submit();
+                });
+            }
+            })();
         </script>
     </body>
 </html>

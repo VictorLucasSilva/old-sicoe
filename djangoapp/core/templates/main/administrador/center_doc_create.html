@@ -50,82 +50,12 @@
 </head>
 <body>
     <div class="wrapper">
-            <aside id="sidebar">
-                <div class="d-flex">
-                    <button class="toggle-btn" type="button">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <div class="sidebar-logo">
-                        <a href="{% url 'home' %}"></a>
-                    </div>
-                </div>
-                <ul class="sidebar-nav">
-                    <li class="sidebar-item">
-                        <a href="{% url 'home' %}" class="sidebar-link">
-                            <i class="bi bi-house"></i>
-                            <span><strong>Home</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <span><strong>Anexos</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
-                            <i class="bi bi-plus-square"></i>
-                            <span><strong>Cadastro</strong></span>
-                        </a>
-                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
-                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
-                                     Relacionamento
-                                </a>
-                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
-                                    </li>
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
-                            <i class="bi bi-person-lock"></i>
-                            <span><strong>Administração</strong></span>
-                        </a>
-                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </aside>
+        {% include "others/sidebar.html" %}
         <div class="main">
             <nav class="navbar navbar-expand px-4 py-2">
                 <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
                     <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
-                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                    <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
                 </a>
             </nav>
               <main class="content px-3 py-4">
@@ -142,7 +72,7 @@
                   <div class="container-fluid">
                       <div class="mb-3">
                           <div class="row">
-                              <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
+                              <div class="col-12 col-lg-12 col-md-12 pb-3 mt-2">
                                   <div class="breadcrumb-div py-3 border-1">
                                       <ol class="breadcrumb my-1 mx-2 px-3">
                                         <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
@@ -155,47 +85,51 @@
                           </div>
                           <div class="row">
                             <div class="col-12 col-lg-12 col-md-12">
-                              <div class="create-div-all py-5 px-5 border-1">
-                                <form method="POST" id="centerDocForm">
-                                    {% csrf_token %}
+                              <div class="create-div-all py-4 px-4 border-1">
+                                <div class="col-12 col-lg-12 col-md-12">
+                                    <div class="create-div-all py-5 px-5 border-1">
+                                        <form method="POST" id="centerDocForm">
+                                            {% csrf_token %}
 
-                                    <div class="mb-4">
-                                        <label for="center" class="form-label"><strong>Estabelecimento:</strong></label>
-                                        <select id="center" name="rcd_fk_establishment"
-                                                class="form-control {% if form.rcd_fk_establishment.errors %}is-invalid{% endif %}" required>
-                                            <option value="">Selecione</option>
-                                            {% for establishment in establishment_l %}
-                                                <option value="{{ establishment.pk }}"
-                                                    {% if form.rcd_fk_establishment.value|stringformat:"s" == establishment.pk|stringformat:"s" %}selected{% endif %}>
-                                                    {{ establishment.est_center }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                        {% if form.rcd_fk_establishment.errors %}
-                                            <div class="invalid-feedback d-block">{{ form.rcd_fk_establishment.errors.0 }}</div>
-                                        {% endif %}
+                                            <div class="mb-4">
+                                                <label for="center" class="form-label"><strong>Estabelecimento:</strong></label>
+                                                <select id="center" name="rcd_fk_establishment"
+                                                        class="form-control {% if form.rcd_fk_establishment.errors %}is-invalid{% endif %}" required>
+                                                    <option value="">Selecione</option>
+                                                    {% for establishment in establishment_l %}
+                                                        <option value="{{ establishment.pk }}"
+                                                            {% if form.rcd_fk_establishment.value|stringformat:"s" == establishment.pk|stringformat:"s" %}selected{% endif %}>
+                                                            {{ establishment.est_center }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                                {% if form.rcd_fk_establishment.errors %}
+                                                    <div class="invalid-feedback d-block">{{ form.rcd_fk_establishment.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <label for="doc" class="form-label"><strong>Documento:</strong></label>
+                                                <select id="doc" name="rcd_fk_document"
+                                                        class="form-control {% if form.rcd_fk_document.errors %}is-invalid{% endif %}" required>
+                                                    <option value="">Selecione</option>
+                                                    {% for document in document_l %}
+                                                        <option value="{{ document.pk }}"
+                                                            {% if form.rcd_fk_document.value|stringformat:"s" == document.pk|stringformat:"s" %}selected{% endif %}>
+                                                            {{ document.d_doc }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                                {% if form.rcd_fk_document.errors %}
+                                                    <div class="invalid-feedback d-block">{{ form.rcd_fk_document.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+
+                                            <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
+                                            <a href="{% url 'center_doc_list' %}" class="btn btn-secondary">Voltar</a>
+                                        </form>
                                     </div>
-
-                                    <div class="mb-4">
-                                        <label for="doc" class="form-label"><strong>Documento:</strong></label>
-                                        <select id="doc" name="rcd_fk_document"
-                                                class="form-control {% if form.rcd_fk_document.errors %}is-invalid{% endif %}" required>
-                                            <option value="">Selecione</option>
-                                            {% for document in document_l %}
-                                                <option value="{{ document.pk }}"
-                                                    {% if form.rcd_fk_document.value|stringformat:"s" == document.pk|stringformat:"s" %}selected{% endif %}>
-                                                    {{ document.d_doc }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                        {% if form.rcd_fk_document.errors %}
-                                            <div class="invalid-feedback d-block">{{ form.rcd_fk_document.errors.0 }}</div>
-                                        {% endif %}
-                                    </div>
-
-                                    <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
-                                    <a href="{% url 'center_doc_list' %}" class="btn btn-secondary">Voltar</a>
-                                </form>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -212,22 +146,11 @@
                             <div class="modal-body">Tem certeza que deseja cadastrar esta relação?</div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="button" class="btn btn-danger" id="btnConfirmarSalvar">Confirmar</button>
+                                <button type="button" class="btn btn-primary" id="btnConfirmarSalvar">Confirmar</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <footer class="footer d-flex justify-content-center align-items-center">
-                    <div class="container-fluid">
-                        <div class="row text-body-secondary align-items-center justify-content-center">
-                            <div class="col-6 text-center pt-2">
-                                <a class="text-body-secondary" href="#">
-                                    <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
             </div>
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
@@ -239,62 +162,100 @@
             document.addEventListener('DOMContentLoaded', function () {
                 const form = document.getElementById('centerDocForm');
                 const estabSelect = document.getElementById('center');
-                const docSelect = document.getElementById('doc');
+                const docSelect   = document.getElementById('doc');
 
-                const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
+                const btnAbrirModal      = document.getElementById('btnAbrirModalSalvar');
                 const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
 
-                form.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') e.preventDefault();
-                });
+                // Bloquear submit por Enter
+                form.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
 
-                fetch("/fetch_centers/")
-                    .then(response => response.json())
+                // Utilitário: recria opções preservando valor se continuar válido
+                function rebuildSelect(selectEl, items, valueKey, textKey) {
+                    const prev = selectEl.value;
+                    selectEl.innerHTML = '<option value="">Selecione</option>';
+
+                    let canKeep = false;
+                    items.forEach(it => {
+                    const opt = document.createElement('option');
+                    opt.value = String(it[valueKey]);
+                    opt.text  = it[textKey] || '';
+                    if (prev && String(prev) === String(it[valueKey])) { opt.selected = true; canKeep = true; }
+                    selectEl.appendChild(opt);
+                    });
+
+                    if (!canKeep) selectEl.value = '';
+                }
+
+                // Carrega listas para o par (doc, center) atual — MESMA VIEW, via AJAX
+                function loadOptions() {
+                    const docId    = docSelect.value || '';
+                    const centerId = estabSelect.value || '';
+                    const url = `${window.location.pathname}?doc=${encodeURIComponent(docId)}&center=${encodeURIComponent(centerId)}`;
+
+                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(r => r.json())
                     .then(data => {
-                        const selectedValue = estabSelect.value;
+                        const ests = (data.establishments || [])
+                        .sort((a,b)=>a.est_center.localeCompare(b.est_center,'pt-BR',{sensitivity:'base'}));
+                        const docs = (data.documents || [])
+                        .sort((a,b)=>a.d_doc.localeCompare(b.d_doc,'pt-BR',{sensitivity:'base'}));
 
-                        estabSelect.innerHTML = '<option value="">Selecione</option>';
-                        data.establishments.forEach(est => {
-                            const opt = document.createElement("option");
-                            opt.value = est.est_id;
-                            opt.text = est.est_center;
-                            if (selectedValue && selectedValue == est.est_id) {
-                                opt.selected = true;
-                            }
-                            estabSelect.appendChild(opt);
-                        });
+                        // Atualiza ambos os combos (simetria)
+                        rebuildSelect(estabSelect, ests, 'est_id', 'est_center');
+                        rebuildSelect(docSelect,   docs, 'doc_id', 'd_doc');
                     })
-                    .catch(error => console.error('Erro ao carregar estabelecimentos:', error));
+                    .catch(err => console.error('Erro ao carregar opções:', err));
+                }
 
+                // Dispara quando QUALQUER um muda
+                docSelect.addEventListener('change',   loadOptions);
+                estabSelect.addEventListener('change', loadOptions);
+
+                // Carga inicial (lista tudo, sem filtro) — mantém sua render inicial e ajusta via AJAX
+                loadOptions();
+
+                // Validações visuais
                 [estabSelect, docSelect].forEach(field => {
                     field.addEventListener('change', function () {
-                        if (this.value.trim()) {
-                            this.classList.add('is-valid');
-                            this.classList.remove('is-invalid');
-                        } else {
-                            this.classList.add('is-invalid');
-                            this.classList.remove('is-valid');
-                        }
+                    if (this.value.trim()) {
+                        this.classList.add('is-valid'); this.classList.remove('is-invalid');
+                    } else {
+                        this.classList.add('is-invalid'); this.classList.remove('is-valid');
+                    }
                     });
                 });
 
+                // Modal de confirmação (mantido)
                 btnAbrirModal.addEventListener('click', function () {
                     let valid = true;
                     [estabSelect, docSelect].forEach(field => {
-                        if (!field.value.trim()) {
-                            field.classList.add('is-invalid');
-                            valid = false;
-                        }
+                    if (!field.value.trim()) { field.classList.add('is-invalid'); valid = false; }
                     });
-
-                    if (valid) {
-                        new bootstrap.Modal(document.getElementById('modalConfirmarSalvar')).show();
-                    }
+                    if (valid) new bootstrap.Modal(document.getElementById('modalConfirmarSalvar')).show();
                 });
 
+                // Spinner + trava no confirmar
+                let locked = false;
                 btnConfirmarSalvar.addEventListener('click', function () {
+                    if (locked) return;
+                    locked = true;
+                    btnConfirmarSalvar.disabled = true;
+                    btnConfirmarSalvar.innerHTML =
+                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
                     form.submit();
                 });
+
+                // Auto-fechar mensagens
+                const msgContainer = document.getElementById('msg-container');
+                if (msgContainer) {
+                    setTimeout(() => {
+                    [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                        bsAlert.close();
+                    });
+                    }, 8000);
+                }
             });
         </script>
     </body>

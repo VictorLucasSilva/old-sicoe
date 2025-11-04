@@ -12,122 +12,37 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <style>
-
         .create-div-document {
-            background-color: #FFF;
-            transition: .4s;
-            cursor: pointer;
-            color: black;
-            height: 100%;
-            border-radius: .25rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            padding: 15px;
-            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
+            background-color: #FFF; transition: .4s; cursor: pointer; color: black; height: 100%;
+            border-radius: .25rem; display: flex; flex-direction: column; justify-content: flex-start;
+            padding: 15px; box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
         }
-
-        .create-div-document .table {
-            font-size: 0.875rem;
-            width: 100%;
-            table-layout: fixed;
-            text-align: center;
-        }
-
-        .create-div-document .table th,
-        .create-div-document .table td {
-            word-wrap: break-word;
-            vertical-align: middle;
-            font-size: 1rem;
-        }
+        .create-div-document .table { font-size: 0.875rem; width: 100%; table-layout: fixed; text-align: center; }
+        .create-div-document .table th, .create-div-document .table td { word-wrap: break-word; vertical-align: middle; font-size: 1rem; }
 
         .is-invalid { border-color: #dc3545; }
         .is-valid { border-color: #00841fff; }
-        .text-danger { color: #dc3545}
-        .text-success { color: #00841fff}
+        .text-danger { color: #dc3545 }
+        .text-success { color: #00841fff }
+
+        .date-wrapper .input-group-text { cursor: pointer; }
+        .input-group.position-relative { position: relative; }
+        .calendar-overlay {
+            position: absolute; inset: 0 auto 0 0; width: 2.75rem; opacity: 0; z-index: 3; cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="wrapper">
-            <aside id="sidebar">
-                <div class="d-flex">
-                    <button class="toggle-btn" type="button">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <div class="sidebar-logo">
-                        <a href="{% url 'home' %}"></a>
-                    </div>
-                </div>
-                <ul class="sidebar-nav">
-                    <li class="sidebar-item">
-                        <a href="{% url 'home' %}" class="sidebar-link">
-                            <i class="bi bi-house"></i>
-                            <span><strong>Home</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <span><strong>Anexos</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
-                            <i class="bi bi-plus-square"></i>
-                            <span><strong>Cadastro</strong></span>
-                        </a>
-                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
-                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
-                                     Relacionamento
-                                </a>
-                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
-                                    </li>
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
-                            <i class="bi bi-person-lock"></i>
-                            <span><strong>Administração</strong></span>
-                        </a>
-                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </aside>
+        {% include "others/sidebar.html" %}
         <div class="main">
             <nav class="navbar navbar-expand px-4 py-2">
                 <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
                     <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
-                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
+                    <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
                 </a>
             </nav>
-              <main class="content px-3 py-4">
+            <main class="content px-3 py-4">
                 {% if messages %}
                   <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
                     {% for message in messages %}
@@ -138,29 +53,33 @@
                     {% endfor %}
                   </div>
                 {% endif %}
-                  <div class="container-fluid">
-                      <div class="mb-3">
-                          <div class="row">
-                              <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
-                                  <div class="breadcrumb-div py-3 border-1">
-                                      <ol class="breadcrumb my-1 mx-2 px-3">
+
+                <div class="container-fluid">
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
+                                <div class="breadcrumb-div py-3 border-1">
+                                    <ol class="breadcrumb my-1 mx-2 px-3">
                                         <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
                                         <li class="breadcrumb-item"><a href="{% url 'user_list' %}">Usuários</a></li>
                                         <li class="breadcrumb-item active" aria-current="page">Alteração</li>
-                                      </ol>
-                                      <h1 class="fw-bold fs-2 mx-5 mt-3">Alteração - Usuário</h1>
-                                  </div>
-                              </div>
-                          </div>
-                          <div class="row">
-                            <div class="col-12 col-lg-12 col-md-12">
-                              <div class="create-div-document py-5 px-5 border-1">
-                                <form method="POST" id="formUserEdit">
+                                    </ol>
+                                    <h1 class="fw-bold fs-2 mx-5 mt-3">Alteração - Usuário</h1>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="col-12 col-lg-12 col-md-12">
+                            <div class="create-div-document py-4 px-4 border-1">
+                              <div class="col-12 col-lg-12 col-md-12">
+                                <div class="create-div-document py-5 px-5 border-1">
+                                  <form method="POST" id="formUserEdit" novalidate>
                                     {% csrf_token %}
 
                                     <div class="mb-4">
                                         <label class="mb-2"><strong>Login:</strong></label>
-                                        <input type="text" class="form-control" value="{{ user_obj.u_login }}" disabled>
+                                        <input type="text" class="form-control" value="{{ user_obj.username }}" disabled>
                                     </div>
 
                                     <div class="mb-4">
@@ -168,16 +87,38 @@
                                         <input type="text" class="form-control" value="{{ user_obj.u_time_in|date:'d/m/Y' }}" disabled>
                                     </div>
 
-                                    <div class="mb-4">
-                                        <label class="mb-2"><strong>Data de Saída:</strong></label>
-                                        <input type="date" id="u_time_out" name="{{ form.u_time_out.name }}"
-                                            value="{{ form.u_time_out.value|default:user_obj.u_time_out|date:'Y-m-d' }}"
-                                            class="form-control {% if form.u_time_out.errors and form.is_bound %}is-invalid{% endif %}">
+                                    <div class="mb-4 date-wrapper" id="timeout-wrapper">
+                                        <label for="u_time_out" class="form-label"><strong>Data de Saída:</strong></label>
+                                        <div class="input-group position-relative">
+                                            <span class="input-group-text" id="icon-cal" role="button" aria-label="Abrir calendário" tabindex="0">
+                                                <i class="bi bi-calendar3"></i>
+                                            </span>
+
+                                            <input type="date" id="native-timeout" class="calendar-overlay" aria-label="Calendário nativo">
+
+                                            {% if form.is_bound and form.u_time_out.value %}
+                                                <input
+                                                    type="text"
+                                                    id="u_time_out"
+                                                    name="{{ form.u_time_out.name }}"
+                                                    class="form-control {% if form.u_time_out.errors and form.is_bound %}is-invalid{% endif %}"
+                                                    inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"
+                                                    maxlength="10" data-role="datebr" aria-describedby="icon-cal"
+                                                    value="{{ form.u_time_out.value }}" required>
+                                            {% else %}
+                                                <input
+                                                    type="text"
+                                                    id="u_time_out"
+                                                    name="{{ form.u_time_out.name }}"
+                                                    class="form-control {% if form.u_time_out.errors and form.is_bound %}is-invalid{% endif %}"
+                                                    inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"
+                                                    maxlength="10" data-role="datebr" aria-describedby="icon-cal"
+                                                    value="{{ user_obj.u_time_out|date:'d/m/Y' }}" required>
+                                            {% endif %}
+                                        </div>
                                         {% if form.u_time_out.errors and form.is_bound %}
                                             <div id="u_time_out_error" class="text-danger small mt-1">
-                                                {% for error in form.u_time_out.errors %}
-                                                    {{ error }}
-                                                {% endfor %}
+                                                {% for error in form.u_time_out.errors %}{{ error }}{% endfor %}
                                             </div>
                                         {% else %}
                                             <div id="u_time_out_error" class="small mt-1"></div>
@@ -186,37 +127,32 @@
 
                                     <div class="mb-4">
                                         <label class="mb-2"><strong>Perfil:</strong></label>
-                                        <select id="u_profile" name="{{ form.u_profile.name }}" 
-                                                class="form-control {% if form.u_profile.errors and form.is_bound %}is-invalid{% endif %}">
-                                            {% for choice in form.u_profile.field.choices %}
-                                                <option value="{{ choice.0 }}" {% if form.u_profile.value == choice.0 %}selected{% endif %}>
-                                                    {{ choice.1 }}
-                                                </option>
+                                        <select id="perfil" name="perfil" class="form-control">
+                                            {% for name in perfil_choices %}
+                                            <option value="{{ name }}" {% if name == selected_perfil %}selected{% endif %}>
+                                                {{ name }}
+                                            </option>
                                             {% endfor %}
                                         </select>
-                                        {% if form.u_profile.errors and form.is_bound %}
-                                            <div id="u_profile_error" class="text-danger small mt-1">
-                                                {% for error in form.u_profile.errors %}
-                                                    {{ error }}
-                                                {% endfor %}
-                                            </div>
-                                        {% else %}
-                                            <div id="u_profile_error" class="small mt-1"></div>
-                                        {% endif %}
+                                        <div id="u_profile_error" class="small mt-1"></div>
                                     </div>
 
                                     <div class="mb-5">
                                         <label class="mb-2"><strong>Status:</strong></label>
-                                        <select id="u_status" name="{{ form.u_status.name }}" 
+                                        <select id="u_status" name="{{ form.u_status.name }}"
                                                 class="form-control {% if form.u_status.errors and form.is_bound %}is-invalid{% endif %}">
-                                            <option value="Ativo" {% if form.u_status.value == "Ativo" %}selected{% endif %}>Ativo</option>
-                                            <option value="Inativo" {% if form.u_status.value == "Inativo" %}selected{% endif %}>Inativo</option>
+                                            <option value="Ativo"
+                                                {% if form.u_status.value == "Ativo" or not form.is_bound and user_obj.u_status == "Ativo" %}selected{% endif %}>
+                                                Ativo
+                                            </option>
+                                            <option value="Inativo"
+                                                {% if form.u_status.value == "Inativo" or not form.is_bound and user_obj.u_status == "Inativo" %}selected{% endif %}>
+                                                Inativo
+                                            </option>
                                         </select>
                                         {% if form.u_status.errors and form.is_bound %}
                                             <div id="u_status_error" class="text-danger small mt-1">
-                                                {% for error in form.u_status.errors %}
-                                                    {{ error }}
-                                                {% endfor %}
+                                                {% for error in form.u_status.errors %}{{ error }}{% endfor %}
                                             </div>
                                         {% else %}
                                             <div id="u_status_error" class="small mt-1"></div>
@@ -225,107 +161,194 @@
 
                                     <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
                                     <a href="{% url 'user_list' %}" class="btn btn-secondary">Voltar</a>
-                                </form>
+                                  </form>
+                                </div>
                               </div>
                             </div>
                           </div>
-                      </div>
-                  </div>
-              </main>
-                <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Confirmar Alteração</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                Tem certeza que deseja salvar as alterações deste usuário?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="button" class="btn btn-danger" id="btnConfirmarSalvar">Confirmar</button>
-                            </div>
                         </div>
                     </div>
                 </div>
-                <footer class="footer d-flex justify-content-center align-items-center">
-                    <div class="container-fluid">
-                        <div class="row text-body-secondary align-items-center justify-content-center">
-                            <div class="col-6 text-center pt-2">
-                                <a class="text-body-secondary" href="#">
-                                    <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
-                                </a>
-                            </div>
+            </main>
+
+            <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Alteração</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">Tem certeza que deseja salvar as alterações deste usuário?</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" id="btnConfirmarSalvar">
+                                <span class="btn-text">Confirmar</span>
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
                         </div>
                     </div>
-                </footer>
+                </div>
             </div>
+
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-            crossorigin="anonymous"></script>
-        <script src="{% static 'js/script.js' %}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const msgContainer = document.getElementById('msg-container');
-                if (msgContainer) {
-                    setTimeout(() => {
-                        msgContainer.querySelectorAll('.alert').forEach(alert => {
-                            bootstrap.Alert.getOrCreateInstance(alert).close();
-                        });
-                    }, 8000);
-                }
+    </div>
 
-                const form = document.getElementById('formUserEdit');
-                form.addEventListener('keydown', function (event) {
-                    if (event.key === 'Enter') event.preventDefault();
-                });
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script src="{% static 'js/script.js' %}"></script>
 
-                const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
-                const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
-                btnAbrirModal.addEventListener('click', function () {
-                    new bootstrap.Modal(document.getElementById('modalConfirmarSalvar')).show();
-                });
-                btnConfirmarSalvar.addEventListener('click', function () {
-                    form.submit();
-                });
-
-                function validateField(field, errorElement, messageEmpty) {
-                    let value = field.value.trim();
-                    if (!value) {
-                        errorElement.textContent = messageEmpty;
-                        errorElement.className = "text-danger small mt-1";
-                        field.classList.add('is-invalid');
-                        field.classList.remove('is-valid');
-                    } else {
-                        errorElement.textContent = "";
-                        errorElement.className = "text-success small mt-1";
-                        field.classList.remove('is-invalid');
-                        field.classList.add('is-valid');
-                    }
-                }
-
-                const u_time_out = document.getElementById('u_time_out');
-                const u_profile = document.getElementById('u_profile');
-                const u_status = document.getElementById('u_status');
-
-                const u_time_out_error = document.getElementById('u_time_out_error');
-                const u_profile_error = document.getElementById('u_profile_error');
-                const u_status_error = document.getElementById('u_status_error');
-
-                u_time_out.addEventListener('input', function () {
-                    validateField(u_time_out, u_time_out_error, "O campo Data de Saída é obrigatório.");
-                });
-                u_profile.addEventListener('change', function () {
-                    validateField(u_profile, u_profile_error, "O campo Perfil é obrigatório.");
-                });
-                u_status.addEventListener('change', function () {
-                    validateField(u_status, u_status_error, "O campo Status é obrigatório.");
-                });
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const msgContainer = document.getElementById('msg-container');
+        if (msgContainer) {
+          setTimeout(() => {
+            msgContainer.querySelectorAll('.alert').forEach(alert => {
+              bootstrap.Alert.getOrCreateInstance(alert).close();
             });
-        </script>
-    </body>
-</html>
+          }, 8000);
+        }
 
+        const form = document.getElementById('formUserEdit');
+        form.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') event.preventDefault();
+        });
+
+        const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
+        const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+        btnAbrirModal.addEventListener('click', function () {
+          new bootstrap.Modal(document.getElementById('modalConfirmarSalvar')).show();
+        });
+        const btnConfirmarSpinner = btnConfirmarSalvar.querySelector('.spinner-border');
+        const btnConfirmarText = btnConfirmarSalvar.querySelector('.btn-text');
+
+        let = locked = false;
+        btnConfirmarSalvar.addEventListener('click', function () {
+            if (locked) return;
+            locked = true;
+
+            btnConfirmarSalvar.setAttribute('disabled', 'disabled');
+            btnAbrirModal.setAttribute('disabled', 'disabled');
+
+            btnConfirmarSpinner.classList.remove('d-none');
+            btnConfirmarText.textContent = '';
+
+            form.submit();
+        });
+      });
+    </script>
+
+    <script>
+    (function(){
+        const input = document.getElementById('u_time_out');       
+        const nativeDate = document.getElementById('native-timeout'); 
+
+        const pad2 = n => String(n).padStart(2,'0');
+        const formatDateBr = d => `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+        function today0(){ const t = new Date(); t.setHours(0,0,0,0); return t; }
+        function toNativeISO(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+
+        function parseDateBrToDate(v){
+            if(!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return null;
+            const [d,m,y] = v.split('/').map(Number);
+            const dt = new Date(y, m-1, d, 0,0,0,0);
+            if(dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d) return null;
+            return dt;
+        }
+
+        nativeDate.min = toNativeISO(today0());
+
+        function mapRawIndexToFormatted(rawIdx){ let pos = rawIdx; if (pos > 2) pos += 1; if (pos > 4) pos += 1; return pos; }
+        function formatFrom(value, caret){
+            const raw = value.replace(/\D/g, '').slice(0, 8);
+            const rawBefore = value.slice(0, (caret ?? value.length)).replace(/\D/g, '').length;
+
+            let formatted = '';
+            if (raw.length <= 2) formatted = raw;
+            else if (raw.length <= 4) formatted = raw.slice(0,2) + '/' + raw.slice(2);
+            else formatted = raw.slice(0,2) + '/' + raw.slice(2,4) + '/' + raw.slice(4);
+
+            let newCaret = mapRawIndexToFormatted(rawBefore);
+            if (newCaret > formatted.length) newCaret = formatted.length;
+            return { formatted, newCaret };
+        }
+
+        input.addEventListener('keydown', (ev) => {
+            const allowedNav = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'];
+            const val = input.value;
+            const pos = input.selectionStart ?? 0;
+
+            if (ev.key === 'Backspace' && pos > 0 && val[pos-1] === '/') { ev.preventDefault(); input.setSelectionRange(pos-1, pos-1); return; }
+            if (ev.key === 'Delete' && val[pos] === '/') { ev.preventDefault(); input.setSelectionRange(pos+1, pos+1); return; }
+
+            if (allowedNav.includes(ev.key)) return;
+            if (/^\d$/.test(ev.key)) return;
+            if (ev.ctrlKey || ev.metaKey) return;
+            ev.preventDefault();
+        });
+
+        function validateTimeout(){
+            const feedback = document.getElementById('u_time_out_error');
+            const dt = parseDateBrToDate(input.value);
+            const ok = !!dt && dt >= today0();
+            if (ok) {
+                input.classList.remove('is-invalid'); input.classList.add('is-valid');
+                if (feedback) { feedback.textContent = ""; feedback.className = "small mt-1"; }
+            } else {
+                input.classList.add('is-invalid'); input.classList.remove('is-valid');
+                if (feedback) { feedback.textContent = "Informe uma data no formato DD/MM/AAAA (hoje ou futura)."; feedback.className = "text-danger small mt-1"; }
+            }
+            return ok;
+        }
+
+        function onInputMask() {
+            const caret = input.selectionStart ?? input.value.length;
+            const { formatted, newCaret } = formatFrom(input.value, caret);
+            input.value = formatted;
+            try { input.setSelectionRange(newCaret, newCaret); } catch(_) {}
+            validateTimeout();
+        }
+        input.addEventListener('input', onInputMask);
+
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const txt = (e.clipboardData || window.clipboardData).getData('text') || '';
+            const raw = txt.replace(/\D/g, '').slice(0,8);
+            let formatted = '';
+            if (raw.length <= 2) formatted = raw;
+            else if (raw.length <= 4) formatted = raw.slice(0,2) + '/' + raw.slice(2);
+            else formatted = raw.slice(0,2) + '/' + raw.slice(2,4) + '/' + raw.slice(4);
+            input.value = formatted;
+            const end = input.value.length;
+            try { input.setSelectionRange(end, end); } catch(_) {}
+            syncMaskedToNative();
+            validateTimeout();
+        });
+
+        nativeDate.addEventListener('change', () => {
+            if (!nativeDate.value) return;
+            const [y,m,d] = nativeDate.value.split('-').map(Number);
+            const picked = new Date(y, m-1, d, 0,0,0,0);
+            input.value = formatDateBr(picked);
+            validateTimeout();
+        });
+
+        document.getElementById('timeout-wrapper').addEventListener('click', (e) => {
+            if (e.target === input) return;
+            if (typeof nativeDate.showPicker === 'function') nativeDate.showPicker();
+            else { nativeDate.focus(); nativeDate.click(); }
+        });
+
+        function syncMaskedToNative(){
+            const dt = parseDateBrToDate(input.value);
+            if (dt) nativeDate.value = toNativeISO(dt);
+            else nativeDate.value = '';
+        }
+        input.addEventListener('blur', () => setTimeout(syncMaskedToNative, 50));
+
+        syncMaskedToNative();
+        validateTimeout();
+    })();
+    </script>
+</body>
+</html>

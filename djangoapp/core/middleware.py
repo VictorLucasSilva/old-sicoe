@@ -1,462 +1,263 @@
-# core/middleware.py
-import hashlib
 import logging
-import secrets
-import time
-import unicodedata
-import re
-
-from core.utils.security import enforce_content_type
-from django.middleware.csrf import CSRF_SESSION_KEY  # noqa: F401 (mantido caso seja necessário no futuro)
-from typing import Dict, Tuple, List, Any
-from urllib.parse import urlparse
-from django.http import HttpResponseForbidden, HttpResponse
 from django.conf import settings
-from django.core.cache import cache
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
+from django.contrib.auth import logout
 from django.utils.deprecation import MiddlewareMixin
-
-from core.utils.waf import waf_qs_size_guard, QSSizeViolation
-from core.context_processors import set_csp_nonce
-from core.utils.security import get_client_ip
-from core.utils.waf import (
-    inspect_dict, waf_raw_qs_guard, waf_headers_guard,
-    is_safe_redirect_target, suspicious_host, waf_check_all
-)
+from core.utils import get_client_ip, session_fingerprint
 
 logger = logging.getLogger(__name__)
 
-BLACKLISTED_IPS = {"192.168.0.250"}
-_PUBLIC_SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
-PUBLIC_PATHS = ['/', '/login', '/logout']
-SENSITIVE_PATHS = ['/login']
-
-PROTECTED_VIEWS: Dict[str, str] = {
-    'attachment_list': 'Administrador',
-    'establishment_list': 'Administrador',
-    'document_list': 'Administrador',
+PUBLIC_EXACT = {
+    "/", "/login", "/login/", "/logout/", "/favicon.ico", "/robots.txt",
+    "/health", "/ping", "/api/health/db", "/solicitar-acesso", "/post-login/",
 }
 
-PROTECTED_ROUTES: Dict[str, str] = {
-    'administrador/anexos': 'Administrador',
-    'administrador/estabelecimento': 'Administrador',
-    'administrador/documento': 'Administrador',
+ROUTE_ROLES = {
+    "administrador/anexos": {"Administrador"},
+    "auditor/anexos": {"Auditor"},
+    "gerente-regional/anexos": {"Gerente Regional"},
+    "usuario/anexos": {"Usuário"},
 }
 
-REDIRECT_PARAMS = {"next", "redirect", "returnTo"}
+PDF_ALLOWED = {"Administrador", "Auditor", "Gerente Regional", "Usuário",}
 
-def _nfkc(s: str) -> str:
-    return unicodedata.normalize("NFKC", s or "")
+def _is_authenticated(request) -> bool:
+    if getattr(request, "user", None) and request.user.is_authenticated:
+        return True
+    return bool(request.session.get("user_id"))
 
-def _sanitize_for_log(value: str, max_len: int = 120) -> str:
-    if value is None:
-        return ""
-    cleaned = ''.join(ch for ch in str(value) if 32 <= ord(ch) < 127)
-    if len(cleaned) > max_len:
-        cleaned = cleaned[:max_len] + "…"
-    return cleaned
-
-def _same_site_request(request) -> bool:
-    try:
-        host = request.get_host()
-        origin = (request.headers.get("Origin") or "").strip()
-        referer = (request.headers.get("Referer") or "").strip()
-        return (host and (host in origin or host in referer))
-    except Exception:
-        return False
-
-def hash_session(ip: str, ua: str) -> str:
-    return hashlib.sha256(f"{ip}|{ua}".encode()).hexdigest()
-
-def _strong_fingerprint(request, ip: str) -> str:
-    ua = request.META.get('HTTP_USER_AGENT', '') or ''
-    skey = getattr(request, "session", None) and request.session.session_key or ""
-    salt = getattr(settings, "SECRET_KEY", "salt")
-    return hashlib.sha256(f"{skey}|{ua}|{salt}".encode()).hexdigest()
-
-def _compute_fingerprints(request, ip: str) -> List[str]:
-    return [hash_session(ip, request.META.get('HTTP_USER_AGENT', '') or ''), _strong_fingerprint(request, ip)]
-
-class SimpleRateLimitMiddleware(MiddlewareMixin):
-    WINDOW = 10     # segundos
-    MAX_REQ = 50    # por IP por janela
-
-    def process_request(self, request):
-        ip = request.META.get("REMOTE_ADDR", "0.0.0.0")
-        key = f"rl:{ip}"
-        data = cache.get(key, {"t0": time.time(), "n": 0})
-        now = time.time()
-        if now - data["t0"] > self.WINDOW:
-            data = {"t0": now, "n": 0}
-        data["n"] += 1
-        cache.set(key, data, timeout=self.WINDOW)
-        if data["n"] > self.MAX_REQ:
-            return HttpResponse(b"Too Many Requests", status=429)
-        return None
-
-class QueryStringSizeMiddleware(MiddlewareMixin):
-    """
-    Bloqueia requests com URL/QUERY_STRING excessivos (DoS de LargeValue).
-    Deve vir BEM no topo da cadeia de middlewares, antes de qualquer view.
-    """
-
-    # Ajuste os limites aqui se preferir centralizar
-    MAX_URL_LEN = 2048
-    MAX_QS_BYTES = 1024
-    MAX_KEYS = 20
-    MAX_VALUE_BYTES = 256
-    MAX_KEY_BYTES = 64
-
-    def process_request(self, request):
-        # 0) Limite da URL completa
-        full_path = request.get_full_path()  # inclui ?query...
-        if len(full_path.encode("utf-8")) > self.MAX_URL_LEN:
-            logger.warning("[WAF] URL too large: %s bytes", len(full_path.encode("utf-8")))
-            return HttpResponse(b"Request-URI Too Large", status=414)
-
-        raw_qs = request.META.get("QUERY_STRING", "")
-
+def _has_role(request, required: str) -> bool:
+    if getattr(request, "user", None) and request.user.is_authenticated:
         try:
-            waf_qs_size_guard(
-                raw_qs,
-                max_url_len=self.MAX_URL_LEN,
-                max_qs_bytes=self.MAX_QS_BYTES,
-                max_keys=self.MAX_KEYS,
-                max_value_bytes=self.MAX_VALUE_BYTES,
-                max_key_bytes=self.MAX_KEY_BYTES,
-            )
-        except QSSizeViolation as e:
-            logger.warning("[WAF] QS size violation: %s | detail=%s | path=%s", e.reason, getattr(e, "detail", {}), request.path)
-            # 414 para manter coerência com request-line/URI grande; 406/400 também são válidos
-            return HttpResponse(b"Request-URI Too Large", status=414)
-
-        return None  # segue o fluxo normal
-
-class CSPMiddleware(MiddlewareMixin):
-    def process_request(self, request):
-        nonce = secrets.token_urlsafe(16)
-        request.csp_nonce = nonce
-        set_csp_nonce(nonce)
-
-    def process_response(self, request, response):
-        nonce = getattr(request, 'csp_nonce', None)
-        if nonce:
-            csp = (
-                "default-src 'self'; "
-                "script-src 'self' 'nonce-%s' https://cdn.jsdelivr.net https://cdn.lineicons.com; "
-                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.lineicons.com https://fonts.googleapis.com; "
-                "img-src 'self' data:; "
-                "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com https://cdn.lineicons.com; "
-                "connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; "
-                "object-src 'none'; "
-            ) % nonce
-            if not settings.DEBUG:
-                csp += "upgrade-insecure-requests"
-            response['Content-Security-Policy'] = csp
-            response['Permissions-Policy'] = (
-                "geolocation=(), microphone=(), camera=(), payment=(), usb=(), interest-cohort=()"
-            )
-        return response
-
-LOGIN_URL = "/login"
-DEFAULT_LOGIN_LOOP_MAX = 5
-DEFAULT_LOGIN_LOOP_WINDOW = 10
-
-class LoginLoopGuardMiddleware(MiddlewareMixin):
-    """
-    Evita loops de redirect para LOGIN_URL sem bloquear o primeiro acesso ao /login.
-      - Não conta GET/HEAD ao /login (sem ?next=).
-      - Conta apenas redirects (3xx) para /login.
-      - Usa janela temporal e limite; excedendo => 403.
-      - Reseta contador em qualquer resposta que não seja redirect para /login.
-    """
-    def __init__(self, get_response=None):
-        super().__init__(get_response)
-        login_url = getattr(settings, "LOGIN_URL", "/login")
-        self.login_path = urlparse(login_url).path or "/login"
-        self.max_hits = int(getattr(settings, "LOGIN_LOOP_MAX", DEFAULT_LOGIN_LOOP_MAX))
-        self.window = int(getattr(settings, "LOGIN_LOOP_WINDOW", DEFAULT_LOGIN_LOOP_WINDOW))
-        self.static_prefix = getattr(settings, "STATIC_URL", "/static/") or "/static/"
-        self.media_prefix = getattr(settings, "MEDIA_URL", "/media/") or "/media/"
-
-    def _reset(self, request):
-        if hasattr(request, "session"):
-            request.session.pop("_ll_ts", None)
-            request.session.pop("_ll_cnt", None)
-
-    def process_request(self, request):
-        path = (request.path or "")
-        if path.startswith(self.static_prefix) or path.startswith(self.media_prefix):
-            return None
-        if path == self.login_path and request.method in ("GET", "HEAD") and "next" not in request.GET:
-            self._reset(request)
-        return None
-
-    def process_response(self, request, response):
-        try:
-            path = (request.path or "")
-            if path.startswith(self.static_prefix) or path.startswith(self.media_prefix):
-                return response
-
-            if response.status_code in (301, 302, 303, 307, 308) and response.has_header("Location"):
-                loc_path = urlparse(response["Location"]).path
-                if loc_path == self.login_path and hasattr(request, "session"):
-                    now = time.time()
-                    ts = float(request.session.get("_ll_ts") or now)
-                    cnt = int(request.session.get("_ll_cnt") or 0)
-
-                    if (now - ts) > self.window:
-                        ts, cnt = now, 0
-
-                    cnt += 1
-                    request.session["_ll_ts"] = ts
-                    request.session["_ll_cnt"] = cnt
-
-                    if cnt > self.max_hits:
-                        logger.warning("[SECURITY] Loop de login detectado.")
-                        return HttpResponseForbidden("Loop de login detectado.")
-            else:
-                self._reset(request)
-        except Exception:
-            logger.exception("[SECURITY] erro no LoginLoopGuardMiddleware")
-        return response
-
-def _cors_allowed(origin: str) -> bool:
-    allowed = set(getattr(settings, "CORS_ALLOWED_ORIGINS", []) or [])
-    return origin in allowed
-
-def _apply_cors_headers(request, response):
-    origin = request.headers.get("Origin")
-    if not origin:
-        return response
-    if _cors_allowed(origin):
-        response["Vary"] = (response.get("Vary", "") + ", Origin").strip(", ")
-        response["Access-Control-Allow-Origin"] = origin
-        # Como usamos cookies/sessão, é importante habilitar credenciais:
-        response["Access-Control-Allow-Credentials"] = "true"
-        if request.method == "OPTIONS":
-            response["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            response["Access-Control-Allow-Headers"] = "Content-Type, X-Requested-With, Authorization"
-            response["Access-Control-Max-Age"] = "600"
-    return response
-
-def _waf_inspect_params(params: Dict[str, Any], ajax_lenient_enabled: bool) -> Tuple[list, list]:
-    try:
-        rep = inspect_dict(
-            params,
-            allow_numeric=settings.WAF_NUMERIC_FIELDS or [],
-            allow_safe=settings.WAF_SAFE_FIELDS or [],
-            ajax=ajax_lenient_enabled
-        )
-    except TypeError:
-        rep = inspect_dict(
-            params,
-            allow_numeric_fields=settings.WAF_NUMERIC_FIELDS or [],
-            allow_safe_fields=settings.WAF_SAFE_FIELDS or [],
-            ajax=ajax_lenient_enabled
-        )
-
-    findings_block, findings_warn = [], []
-    if isinstance(rep, dict):
-        if rep.get("critical"):
-            findings_block.append(("params", "critical", "params"))
-        for s in rep.get("samples", []):
-            key  = s.get("key", "")
-            cats = set(s.get("report", {}).get("categories", []))
-            if "noncrit" in cats and key in {"q", "search", "term"} and not ajax_lenient_enabled:
-                findings_block.append((key, "noncrit", "search-tautology"))
-            elif "noncrit" in cats:
-                findings_warn.append((key, "noncrit", "excerpt"))
-        return findings_block, findings_warn
-
-    if isinstance(rep, (list, tuple)):
-        if len(rep) >= 2:
-            return list(rep[0] or []), list(rep[1] or [])
-        if len(rep) == 1:
-            return list(rep[0] or []), []
-        return [], []
-    return (list(rep) if rep else []), []
-
-class AuthRequiredMiddleware(MiddlewareMixin):
-    def process_request(self, request):
-        raw_path = request.path or "/"
-        path = _nfkc(raw_path).rstrip('/')
-
-        if not enforce_content_type(request, json_only_paths=settings.JSON_ONLY_PATHS, form_paths=settings.FORM_ONLY_PATHS):
-            return render(request, 'others/acesso_negado.html', status=415)
-
-        ip = get_client_ip(request)
-        ua = request.META.get('HTTP_USER_AGENT', '') or ''
-
-        if ip in BLACKLISTED_IPS:
-            logger.warning(f"[SECURITY] IP bloqueado: {ip}")
-            return render(request, 'others/acesso_negado.html', status=403)
-
-        if waf_headers_guard(request.META):
-            return render(request, 'others/acesso_negado.html', status=403)
-
-        raw_qs = request.META.get('QUERY_STRING', '')
-        if waf_raw_qs_guard(raw_qs):
-            return render(request, 'others/acesso_negado.html', status=403)
-
-        def _csrf_present(req):
-            # aceita cookie + header ou campo de form
-            return (
-                req.META.get('CSRF_COOKIE') or req.COOKIES.get(settings.CSRF_COOKIE_NAME)
-            ) and (
-                req.POST.get('csrfmiddlewaretoken') or
-                req.META.get('HTTP_X_CSRFTOKEN') or
-                req.META.get('HTTP_X_CSRF_TOKEN')
-            )
-
-        def _owner_checker(record_id: str, request):
-            try:
-                from core.models import Attachment, RelationCenterUser
-                uid = request.session.get('user_id')
-                user_centers = set(RelationCenterUser.objects.filter(rcu_fk_user_id=uid)
-                                .values_list('rcu_center', flat=True))
-                obj = Attachment.objects.filter(att_id=record_id).first()
-                return bool(obj and obj.att_center in user_centers)
-            except Exception:
-                return False
-
-        def _tenant_checker(params: dict, request):
-            try:
-                from core.models import RelationCenterUser
-                uid = request.session.get('user_id')
-                qs = RelationCenterUser.objects.filter(rcu_fk_user_id=uid)
-                if 'att_center' in params:
-                    return qs.filter(rcu_center=str(params['att_center'])).exists()
-                if 'center_id' in params:
-                    return qs.filter(rcu_center=str(params['center_id'])).exists()
+            if request.user.groups.filter(name=required).exists():
                 return True
-            except Exception:
-                return False
-
-        is_state_change = request.method in ('POST','PUT','PATCH','DELETE')
-        is_form_path = any((request.path or '').startswith(p) for p in settings.FORM_ONLY_PATHS)
-
-        if is_state_change and is_form_path and not _csrf_present(request):
-            return render(request, 'others/acesso_negado.html', status=403)
-
-        if suspicious_host(request.META.get("HTTP_HOST", "")):
-            return render(request, 'others/acesso_negado.html', status=403)
-
-        # Preflight CORS: responder 204 diretamente com headers (sem template)
-        if request.method == "OPTIONS" and request.headers.get("Origin"):
-            if not _cors_allowed(request.headers["Origin"]):
-                return render(request, 'others/acesso_negado.html', status=403)
-            resp = HttpResponse(status=204)
-            return _apply_cors_headers(request, resp)
-
-        public_norm = [_nfkc(p).rstrip('/') for p in PUBLIC_PATHS]
-        if path in public_norm and request.method in _PUBLIC_SAFE_METHODS:
-            return None
-
-        is_ajax = (request.headers.get('X-Requested-With') == 'XMLHttpRequest')
-        ajax_lenient_enabled = is_ajax and _same_site_request(request) and (settings.WAF_AJAX_MODE == 'lenient')
-
-        merged = {}
-        try:
-            for k, v in request.GET.items():
-                merged[k] = v
-            for k, v in request.POST.items():
-                merged[k] = v
-        except Exception as e:
-            logger.exception(f"[WAF] erro ao ler params: {e}")
-            return render(request, 'others/acesso_negado.html', status=406)
-
-        for p in REDIRECT_PARAMS:
-            if p in merged:
-                val = str(merged.get(p) or "")
-                if not is_safe_redirect_target(val):
-                    merged[p] = "/"
-                else:
-                    merged[p] = val
-
-        blocked, details = waf_check_all(request, owner_checker=_owner_checker, tenant_checker=_tenant_checker)
-        if blocked:
-            try:
-                from core.models import SecurityEvent
-                SecurityEvent.objects.create(
-                    sec_action='WAF Block',
-                    sec_description=f"Bloqueio WAF: {details}",
-                    sec_ip=ip,
-                    sec_user_agent=ua,
-                    sec_payload=f"path={path}"
-                )
-            except Exception:
-                pass
-            return render(request, 'others/acesso_negado.html', status=403)
-
-        if path == '/login' and request.method == 'POST':
-            return None
-
-        if path.startswith('/media') or path.startswith('/static'):
-            if settings.DEBUG:
-                return None
-            if not request.session.get('user_id') or not request.session.get('user_profile'):
-                return redirect('login')
-
-        user_id = request.session.get('user_id')
-        user_profile = request.session.get('user_profile')
-        if not user_id or not user_profile:
-            request.session.flush()
-            return redirect('login')
-
-        expected_fp = request.session.get('session_fingerprint')
-        current_candidates = set(_compute_fingerprints(request, ip))
-
-        prev_candidates = set()
-        try:
-            sk_at_login = request.session.get('session_key_at_login') or ''
-            if sk_at_login:
-                salt = getattr(settings, "SECRET_KEY", "salt")
-                prev_strong = hashlib.sha256(f"{sk_at_login}|{ua}|{salt}".encode()).hexdigest()
-                prev_candidates.add(prev_strong)
         except Exception:
             pass
 
-        all_candidates = current_candidates | prev_candidates
-        if not expected_fp or expected_fp not in all_candidates:
-            logger.warning(f"[SECURITY] Fingerprint alterado: {ip}")
-            request.session.flush()
-            return redirect('login')
+    profile = (request.session.get("user_profile") or "").strip()
+    return profile == required
 
-        last_rot = request.session.get('last_rotation')
-        if last_rot is not None:
+def _some_role(request, allowed: set) -> bool:
+    return any(_has_role(request, r) for r in allowed)
+
+class AuthRequiredMiddleware(MiddlewareMixin):
+
+    def process_request(self, request):
+        path = request.path or "/"
+
+        if settings.STATIC_URL and path.startswith(settings.STATIC_URL):
+            return None
+        if path.startswith("/oauth2/"):
+            return None
+
+        if path in PUBLIC_EXACT:
+            return None
+
+        if settings.MEDIA_URL and path.startswith(settings.MEDIA_URL):
+            if not _is_authenticated(request):
+                return redirect("login")
+
+            if path.lower().endswith(".pdf"):
+                if not _some_role(request, PDF_ALLOWED):
+                    logger.warning("Acesso negado a PDF por perfil/grupo: %s", request.session.get("user_profile"))
+                    return render(request, "others/acesso_negado.html", status=403)
+            return None
+
+        if not _is_authenticated(request):
             try:
-                last_rot = float(last_rot)
-            except (TypeError, ValueError):
-                last_rot = None
-
-        now_ts = time.time()
-        if last_rot and (now_ts - last_rot) > 900:
-            request.session.cycle_key()
-            request.session['last_rotation'] = now_ts
-        elif not last_rot:
-            request.session['last_rotation'] = now_ts
+                request.session.flush()
+            except Exception:
+                pass
+            return redirect("login")
 
         try:
-            if getattr(request, "resolver_match", None):
-                view_name = request.resolver_match.view_name or ""
-                expected = PROTECTED_VIEWS.get(view_name)
-                if expected and _nfkc(str(user_profile)) != _nfkc(expected):
-                    logger.warning("[AUTHZ] 403(view) em %s | user_id=%s profile_raw=%r esperado=%r",
-                                   path, user_id, user_profile, expected)
-                    return render(request, 'others/acesso_negado.html', status=403)
-        except Exception:
-            logger.exception("[AUTHZ] erro ao resolver view_name")
+            ip = get_client_ip(request)
+            ua = request.META.get("HTTP_USER_AGENT", "")
+            fp_now = session_fingerprint(ip, ua, settings.SECRET_KEY)
+            fp_saved = request.session.get("fp")
 
-        for prefix, expected in PROTECTED_ROUTES.items():
-            if path.startswith(f"/{_nfkc(prefix)}"):
-                if _nfkc(str(user_profile)) != _nfkc(expected):
-                    logger.warning("[AUTHZ] 403(path) em %s | user_id=%s profile_raw=%r esperado=%r",
-                                   path, user_id, user_profile, expected)
-                    return render(request, 'others/acesso_negado.html', status=403)
+            if not fp_saved:
+                request.session["fp"] = fp_now
+            elif fp_saved != fp_now:
+                logger.warning("Sessão inválida: fingerprint alterado (%s -> %s)", fp_saved[:8], fp_now[:8])
+                try:
+                    logout(request) 
+                except Exception:
+                    pass
+                try:
+                    request.session.flush()
+                except Exception:
+                    pass
+                return redirect("login")
+        except Exception as e:
+            logger.error("Erro ao validar fingerprint da sessão: %s", e)
+            return redirect("login")
+
+        for prefix, allowed in ROUTE_ROLES.items():
+            if path.startswith(f"/{prefix}"):
+                if not _some_role(request, allowed):
+                    logger.warning("Acesso negado por perfil/grupo: path=%s allowed=%s", path, allowed)
+                    return render(request, "others/acesso_negado.html", status=403)
+                break
 
         return None
 
-    def process_response(self, request, response):
-        response = _apply_cors_headers(request, response)
-        return response
+class RouteAclMiddleware(MiddlewareMixin):
+    ALLOW_SUPERUSER_BYPASS = False
+
+    GROUPS_BY_URL = {
+        'attachment_list_audit': {'Auditor'},
+        'home_audit': {'Auditor'},
+        'audit_list_audit': {'Auditor'},
+        'email_list_audit': {'Auditor'},
+        'attachment_history_all_audit': {'Auditor'},
+        'attachment_history_audit': {'Auditor'},
+
+        'attachment_list_manager': {'Gerente Regional'},
+        'home_manager': {'Gerente Regional'},
+        'attachment_history_manager': {'Gerente Regional'},
+        'overview_attachment_create_manager': {'Gerente Regional'},
+
+        'attachment_list_user': {'Usuário'},
+        'home_user': {'Usuário'},
+        'attachment_history_user': {'Usuário'},
+        'overview_attachment_create_user': {'Usuário'},
+
+        'establishment_list': {'Administrador'},
+        'attachment_list': {'Administrador'},
+        'overview': {'Administrador'},
+        'document_list': {'Administrador'},
+        'center_user_list': {'Administrador'},
+        'center_doc_list': {'Administrador'},
+        'user_list': {'Administrador'},
+        'audit_list': {'Administrador'},
+        'apiestab': {'Administrador'},
+        'cnpj_list': {'Administrador'},
+        'attachment_units_by_center': {'Administrador', 'Auditor', 'Gerente Regional', 'Usuário'},
+        'attachment_conference': {'Administrador'},
+        'attachment_history_all': {'Administrador'},
+        'email_list': {'Administrador'},
+        'user_access': {'Administrador'},
+        'attachment_create': {'Administrador'},
+        'document_create': {'Administrador'},
+        'cnpj_create': {'Administrador'},
+        'overview_attachment_create': {'Administrador'},
+        'center_doc_create': {'Administrador'},
+        'center_user_create': {'Administrador'},
+        'center_user_create_user': {'Administrador'},
+        'center_user_create_ids': {'Administrador'},
+        'user_edit': {'Administrador'},
+        'cnpj_update': {'Administrador'},
+        'document_delete': {'Administrador'},
+        'document_update': {'Administrador'},
+        'center_doc_update': {'Administrador'},
+        'conference_invalidation': {'Administrador'},
+        'conference_data_expire': {'Administrador'},
+        'center_user_update': {'Administrador'},
+        'establishment_update': {'Administrador'},
+        'num_docs_delete': {'Administrador'},
+        'center_user_delete': {'Administrador'},
+        'center_doc_delete': {'Administrador'},
+        'attachment_invalidation': {'Administrador'},
+        'attachment_validation': {'Administrador'},
+        'attachment_history': {'Administrador'},
+        'home': {'Administrador'},
+    }
+
+    PERMS_BY_URL = {
+        'attachment_list_audit': {'core.view_attachment'},
+        'attachment_list_audit': {'core.view_numdocsestab'},
+        'attachment_history_all_audit': {'core.view_attachment'},
+        'attachment_history_audit': {'core.view_attachment'},
+        'audit_list_audit': {'core.view_audit'},
+        'email_list_audit': {'core.view_email'},
+        'home_audit': {'core.view_attachment'},
+        'attachment_history_all_audit': {'core.view_numdocsestab'},
+        'attachment_history_audit': {'core.view_numdocsestab'},
+
+        'attachment_list_manager': {'core.view_attachment'},
+        'attachment_list_manager': {'core.view_numdocsestab'},
+        'attachment_history_manager': {'core.view_attachment'},
+        'attachment_history_manager': {'core.view_numdocsestab'},
+        'home_manager': {'core.view_attachment'},
+        'overview_attachment_create_manager': {'core.add_attachment'},
+
+        'attachment_list_user': {'core.view_attachment'},
+        'attachment_list_user': {'core.view_numdocsestab'},
+        'attachment_history_user': {'core.view_attachment'},
+        'home_user': {'core.view_attachment'},
+        'overview_attachment_create_user': {'core.add_attachment'},
+        'attachment_history_user': {'core.view_numdocsestab'},
+
+        'establishment_list': {'core.view_establishment'},
+        'attachment_list': {'core.view_attachment'},
+        'overview': {'core.view_attachment'},
+        'document_list': {'core.view_document'},
+        'center_user_list': {'core.view_relationcenteruser'},
+        'center_doc_list': {'core.view_relationcenterdoc'},
+        'user_list': {'core.view_user'},
+        'audit_list': {'core.view_audit'},
+        'apiestab': {'core.view_establishment'},
+        'cnpj_list': {'core.view_numdocsestab'},
+        'attachment_units_by_center': {'core.view_attachment'},
+        'attachment_conference': {'core.change_attachment'},
+        'attachment_history_all': {'core.view_attachment'},
+        'email_list': {'core.view_email'},
+        'user_access': {'core.change_user'},
+
+        'attachment_create': {'core.add_attachment'},
+        'document_create': {'core.add_document'},
+        'cnpj_create': {'core.add_numdocsestab'},
+        'overview_attachment_create': {'core.add_attachment'},
+        'center_doc_create': {'core.add_relationcenterdoc'},
+        'center_user_create': {'core.add_relationcenteruser'},
+        'center_user_create_user': {'core.add_relationcenteruser'},
+        'center_user_create_ids': {'core.add_relationcenteruser'},
+
+        'user_edit': {'core.change_user'},
+        'cnpj_update': {'core.change_numdocsestab'},
+        'document_update': {'core.change_document'},
+        'center_doc_update': {'core.change_relationcenterdoc'},
+        'conference_invalidation': {'core.change_attachment'},
+        'conference_data_expire': {'core.change_attachment'},
+        'center_user_update': {'core.change_relationcenteruser'},
+        'establishment_update': {'core.change_establishment'},
+        'attachment_validation': {'core.change_attachment'},
+        'attachment_invalidation': {'core.change_attachment'},
+
+        'document_delete': {'core.delete_document'},
+        'num_docs_delete': {'core.delete_numdocsestab'},
+        'center_user_delete': {'core.delete_relationcenteruser'},
+        'center_doc_delete': {'core.delete_relationcenterdoc'},
+
+        'attachment_history': {'core.view_attachment'},
+        'home': {'core.view_attachment'},
+    }
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        u = getattr(request, "user", None)
+        if not u or not u.is_authenticated:
+            return None
+
+        match = getattr(request, 'resolver_match', None)
+        if not match:
+            return None
+
+        if self.ALLOW_SUPERUSER_BYPASS and u.is_superuser:
+            return None
+
+        url_name = match.url_name or ""
+
+        required_groups = self.GROUPS_BY_URL.get(url_name)
+        if required_groups:
+            if not u.groups.filter(name__in=required_groups).exists():
+                logger.warning("ACL: grupo negado url_name=%s required=%s", url_name, required_groups)
+                return render(request, "others/acesso_negado.html", status=403)
+
+        needed_perms = self.PERMS_BY_URL.get(url_name)
+        if needed_perms:
+            if not u.has_perms(list(needed_perms)):
+                logger.warning("ACL: perm negada url_name=%s perms=%s", url_name, needed_perms)
+                return render(request, "others/acesso_negado.html", status=403)
+
+        return None

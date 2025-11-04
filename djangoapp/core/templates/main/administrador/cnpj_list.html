@@ -2,407 +2,523 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Estabelecimentos</title>
-    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Estabelecimentos</title>
+
+  <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <style>
-
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .table-div-all {
-            background-color: #FFF;
-            transition: .4s;
-            cursor: pointer;
-            color: black;
-            height: 100%;
-            border-radius: .25rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            padding: 15px;
-            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
-        }
-
-        .table-div-all .table {
-            font-size: 1.3rem;
-            width: 100%;
-            table-layout: fixed;
-            text-align: center;
-        }
-
-        .table-div-all .table,
-        .table-div-all .table td {
-            word-wrap: break-word;
-            vertical-align: middle;
-            font-size: 0.83rem;
-        }
-    </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-div-all{
+      background:#FFF; transition:.4s; cursor:pointer; color:#000; height:100%;
+      border-radius:.25rem; display:flex; flex-direction:column; justify-content:flex-start;
+      padding:15px; box-shadow:.2rem .2rem .3rem .1rem rgb(191,191,191);
+    }
+    .table-div-all .table{ font-size:1.3rem; width:100%; table-layout:fixed; text-align:center; }
+    .table-div-all .table, .table-div-all .table td{ word-wrap:break-word; vertical-align:middle; font-size:.83rem; }
+    .dropdown-menu.filtro-menu{
+      max-height:40vh; overflow-y:auto; overflow-x:hidden;
+      overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
+    }
+  </style>
 </head>
 <body>
-    <div class="wrapper">
-            <aside id="sidebar">
-                <div class="d-flex">
-                    <button class="toggle-btn" type="button">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <div class="sidebar-logo">
-                        <a href="{% url 'home' %}"></a>
-                    </div>
-                </div>
-                <ul class="sidebar-nav">
-                    <li class="sidebar-item">
-                        <a href="{% url 'home' %}" class="sidebar-link">
-                            <i class="bi bi-house"></i>
-                            <span><strong>Home</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <span><strong>Anexos</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
-                            <i class="bi bi-plus-square"></i>
-                            <span><strong>Cadastro</strong></span>
-                        </a>
-                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
-                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
-                                     Relacionamento
-                                </a>
-                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
-                                    </li>
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
-                            <i class="bi bi-person-lock"></i>
-                            <span><strong>Administração</strong></span>
-                        </a>
-                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </aside>
-        <div class="main">
-            <nav class="navbar navbar-expand px-4 py-2">
-                <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
-                  <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
-                  <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
-                </a>
-            </nav>
-            <main class="content px-3 py-4">
-                {% if messages %}
-                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
-                    {% for message in messages %}
-                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                      </div>
-                    {% endfor %}
-                  </div>
-                {% endif %}
-                <div class="container-fluid">
-                    <div class="mb-3">
-                        <div class="row">
-                            <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
-                                <div class="breadcrumb-div py-3 border-1">
-                                    <ol class="breadcrumb my-1 mx-2 px-3">
-                                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
-                                        <li class="breadcrumb-item"><a href="{% url 'establishment_list' %}">Estabelecimentos</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">Unidades</li>
-                                    </ol>
-                                    <h1 class="fw-bold fs-2 mx-5 mt-3">Unidades</h1>
-                                  </div>
-                                </div>
-                                <div class="col-12 col-lg-12 col-md-12">
-                                  <div class="table-div-all py-3 px-3 border-1">
-                                      <div class="small mt-3 mx-3">
-                                        <a href="{% url 'cnpj_create' %}" class="btn btn-primary"><strong>Cadastrar</strong></a>
-                                      </div>
-                                      <div class="my-3 mx-3">
-                                        Exibindo <b id="count-start">{{ page_obj.start_index }}</b>-<b id="count-end">{{ page_obj.end_index }}</b> de <b id="count-total">{{ page_obj.paginator.count }}</b> itens.
-                                      </div>  
-                                      <hr class="mx-1 mb-4">
-                                      <div class="table-responsive">
-                                        <table class="table table-striped table-hover align-middle small">
-                                          <thead>
-                                            <tr>
-                                              <th width="220px"><a>Estabelecimentos</a></th>
-                                              <th width="220px"><a>Unidades</a></th>
-                                              <th width="220px"><a>CNPJ's</a></th>
-                                              <th width="220px"><a>NIRE</a></th>
-                                              <th width="220px"><a>Inscrição Estadual</a></th>
-                                              <th width="220px"><a>Inscrição Municipal</a></th>
-                                              <th width="220px" class="text-center">&nbsp;</th>
-                                            </tr>
-                                            <tr class="filters">
-                                              <td><input type="text" id="center-filter" class="form-control form-control-sm" placeholder="Buscar Estabelecimento" /></td>
-                                              <td><input type="text" id="unit-filter" class="form-control form-control-sm" placeholder="Buscar Unidades" /></td>
-                                              <td><input type="text" id="cnpj-filter" class="form-control form-control-sm" placeholder="Buscar CNPJ" /></td>
-                                              <td><input type="text" id="nire-filter" class="form-control form-control-sm" placeholder="Buscar NIRE"></td>
-                                              <td><input type="text" id="municipal_reg-filter" class="form-control form-control-sm" placeholder="Buscar Inscrção Municipal" /></td>
-                                              <td><input type="text" id="state_reg-filter" class="form-control form-control-sm" placeholder="Buscar Inscrção Estadual" /></td>
-                                              <td></td>
-                                            </tr>
-                                          </thead>
+<div class="wrapper">
+  {% include "others/sidebar.html" %}
+  <div class="main">
+    <nav class="navbar navbar-expand px-4 py-2">
+      <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+        <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
+        <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
+      </a>
+    </nav>
 
-                                          <tbody id="ndest-body">
-                                            {% for cnpj in cnpjs_l %}
-                                              <tr>
-                                                <td>{{ cnpj.ndest_fk_establishment.est_center }}</td>
-                                                <td>{{ cnpj.ndest_units }}</td>
-                                                <td>{{ cnpj.ndest_cnpj }}</td>
-                                                <td>{{ cnpj.ndest_nire }}</td>
-                                                <td>{{ cnpj.ndest_reg_city }}</td>
-                                                <td>{{ cnpj.ndest_reg_state }}</td>
-                                                <td>
-                                                  <div class="d-flex justify-content-end">
-                                                    <form id="delete-form-{{ cnpj.ndest_id }}" method="POST" action="{% url 'num_docs_delete' cnpj.ndest_id %}" style="display: inline;">
-                                                        <a href="{% url 'cnpj_update' cnpj.ndest_id %}" class="btn btn-sm btn-outline-primary">Editar</a>
-                                                        {% csrf_token %}
-                                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ cnpj.ndest_id }}">Excluir</button>
-                                                    </form>
-                                                  </div>
-                                                </td>
-                                              </tr>
-                                            {% empty %}
-                                              <tr>
-                                                <td colspan="2">Nenhum documento encontrado.</td>
-                                              </tr>
-                                            {% endfor %}
-                                          </tbody>
-                                        </table>
-                                      </div>
-                                        <nav aria-label="Page navigation example" class="mt-3">
-                                            <ul class="pagination justify-content-center" id="pagination">
-                                                {% if page_obj.has_previous %}
-                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
-                                                {% else %}
-                                                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-                                                {% endif %}
-                                                {% for num in page_obj.paginator.page_range %}
-                                                {% if page_obj.number == num %}
-                                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                                                {% else %}
-                                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                                                {% endif %}
-                                                {% endfor %}
-                                                {% if page_obj.has_next %}
-                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
-                                                {% else %}
-                                                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-                                                {% endif %}
-                                            </ul>
-                                    </nav>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
-            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                        </div>
-                        <div class="modal-body">
-                            Tem certeza de que deseja excluir este documento?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
-                                Confirmar <span id="loading-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+    <main class="content px-3 py-4">
+      {% if messages %}
+      <div id="msg-container" class="position-fixed top-4 end-0 me-4 mt-3 p-4" style="z-index:1080; width:fit-content; max-width:90%;">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="container-fluid">
+        <div class="mb-3">
+          <div class="row">
+            <div class="col-12 col-lg-12 col-md-12 pb-3 mt-2">
+              <div class="breadcrumb-div py-3 border-1">
+                <ol class="breadcrumb my-1 mx-2 px-3">
+                  <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
+                  <li class="breadcrumb-item"><a href="{% url 'establishment_list' %}">Estabelecimentos</a></li>
+                  <li class="breadcrumb-item active" aria-current="page">Unidades</li>
+                </ol>
+                <h1 class="fw-bold fs-2 mx-5 mt-3">Unidades</h1>
+              </div>
             </div>
-            <footer class="footer d-flex justify-content-center align-items-center">
-                <div class="container-fluid">
-                    <div class="row text-body-secondary align-items-center justify-content-center">
-                        <div class="col-6 text-center pt-2">
-                            <a class="text-body-secondary" href="#">
-                                <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
-                            </a>
-                        </div>
+
+            <div class="col-12 col-lg-12 col-md-12">
+              <div class="table-div-all py-4 px-4 border-1">
+                <div class="col-12 col-lg-12 col-md-12 mb-3">
+                  <div class="table-div-all py-3 px-3 border-1">
+                    <div class="small mt-3 mx-3">
+                      <a href="{% url 'cnpj_create' %}" class="btn btn-primary"><strong>Cadastrar</strong></a>
                     </div>
+
+                    <div class="my-3 mx-3">
+                      Exibindo <b id="count-start">{{ page_obj.start_index }}</b>-<b id="count-end">{{ page_obj.end_index }}</b>
+                      de <b id="count-total">{{ page_obj.paginator.count }}</b> itens.
+                    </div>
+                  </div>
                 </div>
-            </footer>
+
+                <div class="col-12 col-lg-12 col-md-12 mb-4">
+                  <div class="table-div-all py-3 px-3 border-1">
+                    <div class="table-responsive">
+                      <table class="table table-striped table-hover align-middle small">
+                        <thead>
+                          <tr>
+                            <th width="220px"><a>Estabelecimentos</a></th>
+                            <th width="220px"><a>Unidades</a></th>
+                            <th width="220px"><a>CNPJ's</a></th>
+                            <th width="220px"><a>NIRE</a></th>
+                            <th width="220px"><a>Inscrição Estadual</a></th>
+                            <th width="220px"><a>Inscrição Municipal</a></th>
+                            <th width="220px" class="text-center">&nbsp;</th>
+                          </tr>
+                          <tr class="filters">
+                            <td><input type="text" id="center-filter" class="form-control form-control-sm"></td>
+                            <td><input type="text" id="unit-filter" class="form-control form-control-sm"></td>
+                            <td><input type="text" id="cnpj-filter" class="form-control form-control-sm"></td>
+                            <td><input type="text" id="nire-filter" class="form-control form-control-sm"></td>
+                            <td><input type="text" id="state_reg-filter" class="form-control form-control-sm"></td>
+                            <td><input type="text" id="municipal_reg-filter" class="form-control form-control-sm"></td>
+                            <td></td>
+                          </tr>
+                        </thead>
+
+                        <tbody id="ndest-body">
+                          {% for cnpj in cnpjs_l %}
+                            <tr>
+                              <td>{{ cnpj.ndest_fk_establishment.est_center }}</td>
+                              <td>{{ cnpj.ndest_units }}</td>
+                              <td>{{ cnpj.ndest_cnpj }}</td>
+                              <td>{{ cnpj.ndest_nire }}</td>
+                              <td>{{ cnpj.ndest_reg_state }}</td>
+                              <td>{{ cnpj.ndest_reg_city }}</td>
+                              <td>
+                                <div class="d-flex justify-content-end">
+                                  <form id="delete-form-{{ cnpj.ndest_id }}" method="POST" action="{% url 'num_docs_delete' cnpj.ndest_id %}" style="display: inline;">
+                                    <a href="{% url 'cnpj_update' cnpj.ndest_id %}" class="btn btn-sm btn-outline-primary">Editar</a>
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ cnpj.ndest_id }}">Excluir</button>
+                                  </form>
+                                </div>
+                              </td>
+                            </tr>
+                          {% empty %}
+                            <tr><td colspan="7">Nenhum registro encontrado.</td></tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <nav class="mt-4" aria-label="Page navigation" id="pag">
+                  <ul class="pagination justify-content-center" id="pagination">
+                    {% if page_obj.has_previous %}
+                      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                    {% else %}
+                      <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    {% endif %}
+
+                    {% if page_obj.number < 10 %}
+                      {% for num in page_obj.paginator.page_range %}
+                        {% if num <= 10 %}
+                          {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                          {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    {% else %}
+                      {% for num in page_obj.paginator.page_range %}
+                        {% if num >= page_obj.number|add:"-9" and num <= page_obj.number %}
+                          {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                          {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                          {% endif %}
+                          {% endif %}
+                          {% endfor %}
+                          {% endif %}
+                          
+                          {% if page_obj.has_next %}
+                          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                          {% else %}
+                          <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                          {% endif %}
+                        </ul>
+                      </nav>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+    </main>
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+      <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">Tem certeza de que deseja excluir este registro?</div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+            Confirmar <span id="loading-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span>
+          </button>
+        </div>
+      </div></div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
-    <script src="{% static 'js/script.js' %}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-            const msgContainer = document.getElementById('msg-container');
-            if (msgContainer) {
-                setTimeout(() => {
-                [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
-                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                    bsAlert.close();
+
+<script src="{% static 'js/script.js' %}"></script>
+
+<script>
+  const CSRF_TOKEN = (function() {
+    const tpl = '{{ csrf_token }}';
+    if (tpl && tpl !== 'NOTPROVIDED') return tpl;
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return '';
+    }
+    return getCookie('csrftoken') || '';
+  })();
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const msgContainer = document.getElementById('msg-container');
+    if (msgContainer) {
+      setTimeout(() => {
+        [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+          bootstrap.Alert.getOrCreateInstance(alert).close();
+        });
+      }, 5000);
+    }
+  });
+
+  $.ajaxSetup({ headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+
+  $(function(){
+    let ndestIdToDelete = null;
+
+    $(document).on('click', '.btn-outline-danger[data-id]', function(e){
+      e.preventDefault();
+      ndestIdToDelete = $(this).data('id');
+      $('#deleteModal').modal('show');
+    });
+    $('#confirmDeleteBtn').on('click', function(){
+      if (ndestIdToDelete) $('#delete-form-' + ndestIdToDelete).submit();
+    });
+
+    const esc = (s) => (s ?? '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+    const FIELDS = [
+      { id:'#center-filter',        param:'center',    key:'ndest_fk_establishment__est_center', label:'Estabelecimento' },
+      { id:'#unit-filter',          param:'unit',      key:'ndest_units',                        label:'Unidade' },
+      { id:'#cnpj-filter',          param:'cnpj',      key:'ndest_cnpj',                         label:'CNPJ' },
+      { id:'#nire-filter',          param:'nire',      key:'ndest_nire',                         label:'NIRE' },
+      { id:'#state_reg-filter',     param:'reg_state', key:'ndest_reg_state',                    label:'Inscrição Estadual' },
+      { id:'#municipal_reg-filter', param:'reg_city',  key:'ndest_reg_city',                     label:'Inscrição Municipal' },
+    ];
+
+    const optionTokens = Object.fromEntries(FIELDS.map(f => [f.param, 0]));
+    let latestLoadToken = 0;
+    let pendingCloseParam = null;
+
+    function ensureDropdown(field){
+      const $orig = $(field.id);
+      if (!$orig.length || $orig.data('enhanced')) return;
+
+      const id = $orig.attr('id');
+      const currentVal = ($orig.val && $orig.val()) || '';
+
+      const $wrap = $(`
+        <div class="dropdown w-100" data-bs-boundary="viewport">
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-truncate"
+                  data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-display="static"
+                  aria-expanded="false" title="${esc(field.label)}">Todos</button>
+          <ul class="dropdown-menu filtro-menu w-100 p-0" data-param="${field.param}"></ul>
+          <input type="hidden" id="${id}">
+        </div>
+      `);
+
+      $orig.replaceWith($wrap);
+      $wrap.find('input[type="hidden"]').val(currentVal);
+      $wrap.data('enhanced', true);
+      rebuildDropdownOptions(field, [], false);
+    }
+    FIELDS.forEach(ensureDropdown);
+
+    function els(field){
+      const $hidden = $(field.id);
+      const $wrap   = $hidden.closest('.dropdown');
+      return { $hidden, $wrap, $menu: $wrap.find('.dropdown-menu'), $btn: $wrap.find('[data-bs-toggle="dropdown"]') };
+    }
+
+    function setDropdownLoading(field){
+      const { $menu } = els(field);
+      $menu.html(`
+        <li><button type="button" class="dropdown-item" data-value="">Todos</button></li>
+        <li><div class="px-3 py-2 small text-body-secondary">Carregando opções…</div></li>
+      `);
+    }
+
+    function rebuildDropdownOptions(field, values, keepSelection){
+      const { $menu, $hidden, $btn } = els(field);
+      const prev = (keepSelection ? $hidden.val() : '') || '';
+      let html = `<li><button type="button" class="dropdown-item${prev===''?' active':''}" data-value="">Todos</button></li>`;
+      values.forEach(v => {
+        const isActive = (v === prev) ? ' active' : '';
+        html += `<li><button type="button" class="dropdown-item${isActive}" data-value="${esc(v)}" title="${esc(v)}">${esc(v) || '-'}</button></li>`;
+      });
+      $menu.html(html);
+      $btn.text(prev || 'Todos').attr('title', prev || 'Todos');
+    }
+
+    $(document).on('show.bs.dropdown', '.dropdown', function(){
+      const $menu = $(this).find('.dropdown-menu');
+      const rect  = this.getBoundingClientRect();
+      const avail = Math.max(120, Math.floor(window.innerHeight - rect.bottom - 8));
+      $menu.css({ 'max-height': `${avail}px`, 'overflow-y': 'auto', 'overflow-x': 'hidden' });
+    });
+
+    $(document).on('click', '.dropdown-menu[data-param] .dropdown-item', function(e){
+      e.preventDefault();
+      const $menu = $(this).closest('.dropdown-menu');
+      const param = $menu.data('param');
+      const field = FIELDS.find(f => f.param === param);
+      if (!field) return;
+
+      const value = $(this).data('value') || '';
+      const { $hidden, $btn } = els(field);
+
+      $menu.find('.dropdown-item.active').removeClass('active');
+      $(this).addClass('active');
+
+      $hidden.val(value).trigger('change'); 
+      $btn.text(value || 'Todos').attr('title', value || 'Todos');
+
+      pendingCloseParam = field.param;
+    });
+
+    function currentFilters(){
+      const obj = {};
+      FIELDS.forEach(f => { obj[f.param] = $(f.id).val() || ''; });
+      return obj;
+    }
+    function baseFiltersExcept(except){
+      const f = currentFilters();
+      if (except in f) f[except] = '';
+      return f;
+    }
+
+    function fetchPage(params){
+      return $.ajax({ url: "{% url 'cnpj_list' %}", data: params, dataType: 'json' });
+    }
+
+    async function refreshOptionsForField(field){
+      const { $hidden } = els(field);
+      const selected = $hidden.val() || '';
+
+      if (selected){
+        rebuildDropdownOptions(field, [selected], true);
+        return;
+      }
+
+      const token = ++optionTokens[field.param];
+      const base  = baseFiltersExcept(field.param);
+      setDropdownLoading(field);
+
+      try{
+        const first = await fetchPage({ ...base, page: 1 });
+        if (token !== optionTokens[field.param]) return;
+
+        const totalPages = Math.max(1, first.num_pages || 1);
+        const seen = new Set();
+        const values = [];
+
+        (first.results || []).forEach(r => {
+          const v = (r[field.key] ?? '').toString();
+          if (!seen.has(v)){ seen.add(v); values.push(v); }
+        });
+        rebuildDropdownOptions(field, values, true);
+
+        if (totalPages > 1){
+          const jobs = [];
+          for (let p=2; p<=totalPages; p++){
+            jobs.push(
+              fetchPage({ ...base, page:p }).then(pg => {
+                if (token !== optionTokens[field.param]) return;
+                const adds = [];
+                (pg.results || []).forEach(r => {
+                  const v = (r[field.key] ?? '').toString();
+                  if (!seen.has(v)){ seen.add(v); adds.push(v); }
                 });
-                }, 5000);
-            }
-            });
-        </script>
-    <script>
-    $(document).ready(function() {
-        let ndestIdToDelete = null;
-
-        $(document).on('click', '.btn-outline-danger', function(e) {
-            e.preventDefault();
-            ndestIdToDelete = $(this).data('id');
-            $('#deleteModal').modal('show');
-        });
-
-        $('#confirmDeleteBtn').on('click', function() {
-            if (ndestIdToDelete) {
-                $('#delete-form-' + ndestIdToDelete).submit();
-            }
-        });
-
-        function loadDocuments(page = 1) {
-            let center = $('#center-filter').val();
-            let cnpj = $('#cnpj-filter').val();
-            let unit = $('#unit-filter').val();
-            let nire = $('#nire-filter').val();
-            let reg_city = $('#municipal_reg-filter').val();
-            let reg_state = $('#state_reg-filter').val();
-
-            $.ajax({
-                url: "{% url 'cnpj_list' %}",
-                data: {
-                    center: center,
-                    unit: unit,
-                    cnpj: cnpj,
-                    nire: nire,
-                    reg_city: reg_city,
-                    reg_state: reg_state,
-                    page: page,
-                },
-                dataType: 'json',
-                success: function(data) {
-                    let tbody = $('#ndest-body');
-                    tbody.empty();
-                    if (data.results.length > 0) {
-                        $.each(data.results, function(index, cnpj) {
-                            tbody.append(`
-                                <tr>
-                                    <td>${cnpj.ndest_fk_establishment__est_center}</td>
-                                    <td>${cnpj.ndest_units}</td>
-                                    <td>${cnpj.ndest_cnpj}</td>
-                                    <td>${cnpj.ndest_nire}</td>
-                                    <td>${cnpj.ndest_reg_city}</td>
-                                    <td>${cnpj.ndest_reg_state}</td>
-                                    <td>
-                                        <div class="d-flex justify-content-end">
-                                            <form id="delete-form-${cnpj.ndest_id}" method="POST" action="/administrador/cnpj/${cnpj.ndest_id}/excluir/" style="display: inline;">
-                                                <a href="/administrador/cnpj/${cnpj.ndest_id}/editar" class="btn btn-sm btn-outline-primary">Editar</a>
-                                                {% csrf_token %}
-                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="${cnpj.ndest_id}">Excluir</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `);
-                        });
-                    } else {
-                        tbody.append('<tr><td colspan="2">Nenhum documento encontrado.</td></tr>');
-                    }
-
-                    $('#count-start').text(data.start_index);
-                    $('#count-end').text(data.end_index);
-                    $('#count-total').text(data.count);
-
-                    let pagination = $('#pagination');
-                    pagination.empty();
-
-                    if (data.current_page > 1) {
-                        pagination.append(`
-                            <li class="page-item">
-                                <a class="page-link" href="#" data-page="${data.current_page - 1}">&laquo;</a>
-                            </li>
-                        `);
-                    } else {
-                        pagination.append('<li class="page-item disabled"><span class="page-link">&laquo;</span></li>');
-                    }
-
-                    for (let i = 1; i <= data.num_pages; i++) {
-                        if (i === data.current_page) {
-                            pagination.append(`<li class="page-item active"><span class="page-link">${i}</span></li>`);
-                        } else {
-                            pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`);
-                        }
-                    }
-
-                    if (data.current_page < data.num_pages) {
-                        pagination.append(`
-                            <li class="page-item">
-                                <a class="page-link" href="#" data-page="${data.current_page + 1}">&raquo;</a>
-                            </li>
-                        `);
-                    } else {
-                        pagination.append('<li class="page-item disabled"><span class="page-link">&raquo;</span></li>');
-                    }
+                if (adds.length){
+                  values.push(...adds);
+                  rebuildDropdownOptions(field, values, true);
                 }
-            });
+              }).catch(()=>{})
+            );
+          }
+          await Promise.allSettled(jobs);
+        }
+      } finally {
+        const { $menu } = els(field);
+        $menu.find('.text-body-secondary:contains("Carregando")').closest('li').remove();
+      }
+    }
+    async function refreshAllOptions(){ await Promise.allSettled(FIELDS.map(refreshOptionsForField)); }
 
-              }
-              $('#center-filter, #unit-filter, #cnpj-filter, #nire-filter, #municipal_reg-filter, #state_reg-filter').on('input', function() {
-                  loadDocuments();
-              });
+    function returnDropdownToPlace(){
+      if (!pendingCloseParam) return;
+      const field = FIELDS.find(f => f.param === pendingCloseParam);
+      if (!field) { pendingCloseParam = null; return; }
 
-              $('#pagination').on('click', 'a.page-link', function(e) {
-                  e.preventDefault();
-                  let page = $(this).data('page');
-                  if (page) {
-                      loadDocuments(page);
-                  }
-              });
-          });
-    </script>
-    </body>
+      const { $wrap, $menu, $hidden } = els(field);
+      const btnEl = $wrap.find('[data-bs-toggle="dropdown"]')[0];
+      if (btnEl) bootstrap.Dropdown.getOrCreateInstance(btnEl).hide();
+
+      const selected = $hidden.val() || '';
+      if (selected) rebuildDropdownOptions(field, [selected], true);
+      $menu.scrollTop(0);
+      pendingCloseParam = null;
+    }
+
+    function renderRows(items){
+      const $tbody = $('#ndest-body').empty();
+      if (!Array.isArray(items) || !items.length){
+        $tbody.append('<tr><td colspan="7">Nenhum registro encontrado.</td></tr>');
+        return;
+      }
+      items.forEach(x => {
+        const editUrl = x.edit_url || (`/administrador/cnpj/${x.ndest_id}/editar`);
+        const delUrl  = x.delete_url|| (`/administrador/cnpj/${x.ndest_id}/excluir/`);
+        $tbody.append(`
+          <tr>
+            <td>${esc(x.ndest_fk_establishment__est_center)}</td>
+            <td>${esc(x.ndest_units)}</td>
+            <td>${esc(x.ndest_cnpj)}</td>
+            <td>${esc(x.ndest_nire)}</td>
+            <td>${esc(x.ndest_reg_state)}</td>
+            <td>${esc(x.ndest_reg_city)}</td>
+            <td>
+              <div class="d-flex justify-content-end">
+                <form id="delete-form-${x.ndest_id}" method="POST" action="${delUrl}" style="display: inline;">
+                  <a href="${editUrl}" class="btn btn-sm btn-outline-primary">Editar</a>
+                  <input type="hidden" name="csrfmiddlewaretoken" value="${CSRF_TOKEN}">
+                  <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="${x.ndest_id}">Excluir</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        `);
+      });
+    }
+
+    function renderCounters(start, end, total){
+      $('#count-start').text(start ?? 0);
+      $('#count-end').text(end ?? 0);
+      $('#count-total').text(total ?? 0);
+    }
+
+    function renderPagination(current, total){
+      const pag = document.getElementById('pagination');
+      if (!pag) return;
+      pag.innerHTML = '';
+
+      const start = Math.max(1, current - 9);
+      const end   = Math.min(total, start + 9);
+
+      if (current > 1) {
+        pag.innerHTML += `<li class="page-item">
+          <a class="page-link" href="?page=${current - 1}" data-page="${current - 1}" aria-label="Anterior">&laquo;</a>
+        </li>`;
+      } else {
+        pag.innerHTML += `<li class="page-item disabled">
+          <span class="page-link" aria-disabled="true">&laquo;</span>
+        </li>`;
+      }
+      for (let i = start; i <= end; i++) {
+        if (i === current) {
+          pag.innerHTML += `<li class="page-item active" aria-current="page">
+            <span class="page-link">${i}</span>
+          </li>`;
+        } else {
+          pag.innerHTML += `<li class="page-item">
+            <a class="page-link" href="?page=${i}" data-page="${i}">${i}</a>
+          </li>`;
+        }
+      }
+      if (current < total) {
+        pag.innerHTML += `<li class="page-item">
+          <a class="page-link" href="?page=${current + 1}" data-page="${current + 1}" aria-label="Próxima">&raquo;</a>
+        </li>`;
+      } else {
+        pag.innerHTML += `<li class="page-item disabled">
+          <span class="page-link" aria-disabled="true">&raquo;</span>
+        </li>`;
+      }
+    }
+
+    function loadCNPJs(page=1){
+      const token = ++latestLoadToken;
+      const params = { ...currentFilters(), page };
+      fetchPage(params).done(async (data) => {
+        if (token !== latestLoadToken) return;
+        renderRows(data.results || []);
+        renderCounters(data.start_index ?? 0, data.end_index ?? 0, data.count ?? 0);
+        renderPagination(data.current_page ?? 1, data.num_pages ?? 1);
+
+        await refreshAllOptions();
+        returnDropdownToPlace();
+      }).fail(() => {
+        $('#ndest-body').html('<tr><td colspan="7">Erro ao carregar dados.</td></tr>');
+      });
+    }
+
+    FIELDS.forEach(f => { $(document).on('change', f.id, function(){ loadCNPJs(1); }); });
+    $('#pagination').on('click', 'a.page-link', function(e){
+      e.preventDefault();
+      const href = $(this).attr('href') || '';
+      const qs   = href.split('?')[1] || '';
+      const page = $(this).data('page') || new URLSearchParams(qs).get('page');
+      if (page) loadCNPJs(parseInt(page, 10));
+    });
+
+    loadCNPJs(1);
+  });
+</script>
+</body>
 </html>

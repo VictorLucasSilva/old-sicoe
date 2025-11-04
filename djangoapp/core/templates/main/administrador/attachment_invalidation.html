@@ -11,6 +11,7 @@
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css">
     <style>
 
         .create-div-all {
@@ -34,7 +35,7 @@
             text-align: center;
         }
 
-        .create-div-all .table th,
+        .create-div-all .table,
         .create-div-all .table td {
             word-wrap: break-word;
             vertical-align: middle;
@@ -43,207 +44,179 @@
     </style>
 </head>
 <body>
-    <div class="wrapper">
-            <aside id="sidebar">
-                <div class="d-flex">
-                    <button class="toggle-btn" type="button">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <div class="sidebar-logo">
-                        <a href="{% url 'home' %}"></a>
-                    </div>
-                </div>
-                <ul class="sidebar-nav">
-                    <li class="sidebar-item">
-                        <a href="{% url 'home' %}" class="sidebar-link">
-                            <i class="bi bi-house"></i>
-                            <span><strong>Home</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <span><strong>Anexos</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
-                            <i class="bi bi-plus-square"></i>
-                            <span><strong>Cadastro</strong></span>
-                        </a>
-                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
-                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
-                                     Relacionamento
-                                </a>
-                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
-                                    </li>
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
-                            <i class="bi bi-person-lock"></i>
-                            <span><strong>Administração</strong></span>
-                        </a>
-                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </aside>
-        <div class="main">
-            <nav class="navbar navbar-expand px-4 py-2">
-                <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
-                    <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
-                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
-                </a>
-            </nav>
-              <main class="content px-3 py-4">
-                {% if messages %}
-                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
+<div class="wrapper">
+    {% include "others/sidebar.html" %}
+    <div class="main">
+        <nav class="navbar navbar-expand px-4 py-2">
+            <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+                <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
+                <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
+            </a>
+        </nav>
+
+        <main class="content px-3 py-4">
+            {% if messages %}
+                <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
                     {% for message in messages %}
-                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                      </div>
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                        </div>
                     {% endfor %}
-                  </div>
-                {% endif %}
-                  <div class="container-fluid">
-                      <div class="mb-3">
-                          <div class="row">
-                              <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
-                                  <div class="breadcrumb-div py-3 border-1">
-                                      <ol class="breadcrumb my-1 mx-2 px-3">
-                                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
-                                        <li class="breadcrumb-item"><a href="{% url 'center_doc_list' %}">Relação - Estabelecimento e Documento</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">Criação</li>
-                                      </ol>
-                                      <h1 class="fw-bold fs-2 mx-5 mt-3">Cadastro de Relação</h1>
-                                  </div>
-                              </div>
-                          </div>
-                          <div class="row">
-                            <div class="col-12 col-lg-12 col-md-12">
-                              <div class="create-div-all py-5 px-5 border-1">
-                                <form method="POST">
-                                  {% csrf_token %}
-                                  
-                                  <div class="mb-3">
-                                    <label for="center" class="form-label mb-1"><strong>Estabelecimento</strong></label>
-                                    <input type="text" name="center" id="center" class="form-control" value="{{ attachment_l.att_center }}" disabled>
-                                  </div>
+                </div>
+            {% endif %}
 
-                                  <div class="mb-3">
-                                    <label for="doc" class="form-label mb-1"><strong>Documento</strong></label>
-                                    <input type="text" name="doc" id="doc" class="form-control" value="{{ attachment_l.att_doc }}" disabled>
-                                  </div>
-
-                                  <div class="mb-3">
-                                    <label for="just" class="form-label mb-1"><strong>Justificativa</strong></label><br>
-                                    <textarea id="just" name="just" rows="4" cols="180" required></textarea>
-                                  </div>
-
-                                  <button type="submit" class="btn btn-primary mb-4">Salvar</button>
-                                  <a href="{% url 'attachment_list' %}" class="btn btn-secondary mb-4">Voltar</a>
-                                </form>
-                              </div>
+            <div class="container-fluid">
+                <div class="mb-3">
+                    <div class="row">
+                        <div class="col-12 col-lg-12 pb-3 mt-2">
+                            <div class="breadcrumb-div py-3 border-1">
+                                <ol class="breadcrumb my-1 mx-2 px-3">
+                                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
+                                    <li class="breadcrumb-item"><a href="{% url 'attachment_list' %}">Anexos</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Invalidação</li>
+                                </ol>
+                                <h1 class="fw-bold fs-2 mx-5 mt-3">Invalidação</h1>
                             </div>
-                          </div>
-                      </div>
-                  </div>
-              </main>
-            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                         </div>
-                        <div class="modal-body">
-                            Tem certeza de que deseja excluir este documento?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
-                                Confirmar <span id="loading-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span>
-                            </button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="create-div-all py-4 px-4 border-1">
+                                <div class="col-12">
+                                    <div class="create-div-all py-5 px-5 border-1">
+                                        <form method="POST" id="formAttJust">
+                                            {% csrf_token %}
+                                            <div class="mb-4">
+                                                <label for="center" class="form-label mb-2"><strong>Estabelecimento</strong></label>
+                                                <input type="text" name="center" id="center" class="form-control" value="{{ attachment_l.att_center }}" disabled>
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <label for="doc" class="form-label mb-2"><strong>Documento</strong></label>
+                                                <input type="text" name="doc" id="doc" class="form-control" value="{{ attachment_l.att_doc }}" disabled>
+                                            </div>
+
+                                            <div class="mb-5">
+                                                <label for="{{ form.att_just.id_for_label }}" class="form-label mb-2"><strong>Justificativa</strong></label>
+                                                {{ form.att_just }}
+                                                {% if form.att_just.errors %}
+                                                    <div class="text-danger mt-2">
+                                                        {% for error in form.att_just.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-primary"
+                                                id="btnAbrirModalSalvar"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalConfirmarSalvar">
+                                                Salvar
+                                            </button>
+                                            <a href="{% url 'attachment_list' %}" class="btn btn-secondary">Voltar</a>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-                <footer class="footer d-flex justify-content-center align-items-center">
-                    <div class="container-fluid">
-                        <div class="row text-body-secondary align-items-center justify-content-center">
-                            <div class="col-6 text-center pt-2">
-                                <a class="text-body-secondary" href="#">
-                                    <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
-                                </a>
-                            </div>
-                        </div>
+        </main>
+
+        <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1" aria-labelledby="modalConfirmarSalvarLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalConfirmarSalvarLabel">Confirmar Alteração</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                     </div>
-                </footer>
+                    <div class="modal-body">
+                        Tem certeza que deseja salvar as alterações feitas no documento?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="btnConfirmarSalvar">Confirmar</button>
+                    </div>
+                </div>
             </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-            crossorigin="anonymous"></script>
-        <script src="{% static 'js/script.js' %}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-            const msgContainer = document.getElementById('msg-container');
-            if (msgContainer) {
-                setTimeout(() => {
-                [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
-                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                    bsAlert.close();
-                });
-                }, 8000);
-            }
-            });
-        </script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                fetch("/fetch_centers/")
-                    .then(response => response.json())
-                    .then(data => {
-                        const centerInput = document.getElementById("center");
+    </div>
+</div>
 
-                        data.establishments.forEach(est => {
-                            const opt = document.createElement("option");
-                            opt.value = est.est_id;
-                            opt.text = est.est_center;
-                            centerInput.appendChild(opt);
-                        });
-                    })
-                    .catch(error => console.error('Erro ao carregar dados:', error));
-            });
-        </script>
-    </body>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/js/bootstrap-datepicker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/locales/bootstrap-datepicker.pt-BR.min.js"></script>
+<script src="{% static 'js/script.js' %}"></script>
+<script>
+(function () {
+  document.addEventListener('DOMContentLoaded', function () {
+
+    const msgContainer = document.getElementById('msg-container');
+    if (msgContainer) {
+      setTimeout(() => {
+        [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+          const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+          bsAlert.close();
+        });
+      }, 5000);
+    }
+
+    const form = document.getElementById('formAttJust');
+    const modalEl = document.getElementById('modalConfirmarSalvar');
+    const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+
+    if (!form || !modalEl || !btnConfirmarSalvar) return;
+
+    form.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      const tag = (e.target.tagName || '').toUpperCase();
+      const type = (e.target.type || '').toUpperCase();
+      const isTextArea = tag === 'TEXTAREA';
+      const isButtonLike = tag === 'BUTTON' || (tag === 'INPUT' && (type === 'SUBMIT' || type === 'BUTTON'));
+      if (!isTextArea && !isButtonLike) e.preventDefault();
+    });
+
+    let revertTimeout = null;
+    function setConfirmBusy(busy) {
+      if (!btnConfirmarSalvar) return;
+      if (busy) {
+        btnConfirmarSalvar.disabled = true;
+        if (!btnConfirmarSalvar.dataset.originalHtml) {
+          btnConfirmarSalvar.dataset.originalHtml = btnConfirmarSalvar.innerHTML;
+        }
+        btnConfirmarSalvar.innerHTML =
+          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+        revertTimeout = setTimeout(() => setConfirmBusy(false), 10000);
+      } else {
+        if (revertTimeout) { clearTimeout(revertTimeout); revertTimeout = null; }
+        btnConfirmarSalvar.disabled = false;
+        if (btnConfirmarSalvar.dataset.originalHtml) {
+          btnConfirmarSalvar.innerHTML = btnConfirmarSalvar.dataset.originalHtml;
+        }
+      }
+    }
+
+    modalEl.addEventListener('show.bs.modal', () => setConfirmBusy(false));
+
+    btnConfirmarSalvar.addEventListener('click', function () {
+      setConfirmBusy(true);
+      if (form.requestSubmit) form.requestSubmit(); 
+      else form.submit();
+    });
+
+    form.addEventListener('submit', function () { setConfirmBusy(true); });
+  });
+})();
+</script>
+</body>
 </html>
-

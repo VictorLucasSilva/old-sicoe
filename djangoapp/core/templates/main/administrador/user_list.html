@@ -2,416 +2,656 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Estabelecimentos</title>
-    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <style>
-      .table-responsive {
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-      }
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Estabelecimentos</title>
 
-      .table-div-all {
-          background-color: #FFF;
-          transition: .4s;
-          cursor: pointer;
-          color: black;
-          height: 100%;
-          border-radius: .25rem;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
-          padding: 15px;
-          box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
-      }
+  <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+        crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
-      .table-div-all .table {
-          font-size: 1.3rem;
-          width: 100%;
-          table-layout: fixed;
-          text-align: center;
-      }
+  <style>
+    .table-responsive{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .table-div-all{
+      background:#FFF; transition:.4s; cursor:pointer; color:#000; height:100%;
+      border-radius:.25rem; display:flex; flex-direction:column; justify-content:flex-start;
+      padding:15px; box-shadow:.2rem .2rem .3rem .1rem rgb(191,191,191);
+    }
+    .table-div-all .table{ font-size:1.3rem; width:100%; table-layout:fixed; text-align:center; }
+    .table-div-all .table, .table-div-all .table td{
+      word-wrap:break-word; vertical-align:middle; font-size:.82rem;
+    }
+    .dropdown-menu.filtro-menu{
+      max-height:40vh; overflow-y:auto; overflow-x:hidden;
+      overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
+    }
 
-      .table-div-all .table,
-      .table-div-all .table td {
-          word-wrap: break-word;
-          vertical-align: middle;
-          font-size: 0.82rem;
-      }
-    </style>
+    :root{
+      --filtro-borda:#aaaaaaff; --filtro-glow:rgba(37,99,235,.2); --filtro-borda-focus:#8aa2ff;
+    }
+    .filters .form-control,
+    .filters .dropdown > .btn,
+    .filters .input-group-text{
+      border-color:var(--filtro-borda);
+      border-width:1px; border-radius:.300rem;
+    }
+    .filters .input-group .input-group-text{ background:#fff; border-right-color:var(--filtro-borda); }
+    .filters .input-group .form-control{ border-left-color:var(--filtro-borda); }
+    .filters .form-control:focus,
+    .filters .dropdown > .btn:focus,
+    .filters .dropdown > .btn.show{ box-shadow:0 0 0 .2rem var(--filtro-glow); }
+    .filters .dropdown-menu{ border-color:var(--filtro-borda); }
+
+    .calendar-overlay{
+      position:absolute; inset:0 auto 0 0;
+      width:2.75rem; opacity:0; z-index:3; cursor:pointer;
+    }
+    .input-group.position-relative{ position:relative; }
+  </style>
 </head>
 <body>
-    <div class="wrapper">
-            <aside id="sidebar">
-                <div class="d-flex">
-                    <button class="toggle-btn" type="button">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <div class="sidebar-logo">
-                        <a href="{% url 'home' %}"></a>
+<div class="wrapper">
+  {% include "others/sidebar.html" %}
+  <div class="main">
+    <nav class="navbar navbar-expand px-4 py-2">
+      <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+        <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
+        <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
+      </a>
+    </nav>
+
+    <main class="content px-3 py-4">
+      {% if messages %}
+      <div id="msg-container" class="position-fixed top-4 end-0 me-4 mt-3 p-4" style="z-index:1080; width:fit-content; max-width:90%;">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="container-fluid">
+        <div class="mb-3">
+          <div class="row">
+            <div class="col-12 col-lg-12 col-md-12 pb-3 mt-2">
+              <div class="breadcrumb-div py-3 border-1">
+                <ol class="breadcrumb my-1 mx-2 px-3">
+                  <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
+                  <li class="breadcrumb-item active" aria-current="page">Usuários</li>
+                </ol>
+                <h1 class="fw-bold fs-2 mx-5 mt-3">Usuário</h1>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-12 col-md-12">
+              <div class="table-div-all py-4 px-4 border-1">
+                <div class="col-12 col-lg-12 col-md-12 mb-3">
+                  <div class="table-div-all py-3 px-3 border-1">
+                    <div class="small mt-3 mx-3">
+                      <a href="{% url 'user_access' %}" class="btn btn-primary"><strong>Conceder Acesso</strong></a>
                     </div>
-                </div>
-                <ul class="sidebar-nav">
-                    <li class="sidebar-item">
-                        <a href="{% url 'home' %}" class="sidebar-link">
-                            <i class="bi bi-house"></i>
-                            <span><strong>Home</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <span><strong>Anexos</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
-                            <i class="bi bi-plus-square"></i>
-                            <span><strong>Cadastro</strong></span>
-                        </a>
-                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
-                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
-                                     Relacionamento
-                                </a>
-                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
-                                    </li>
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
-                            <i class="bi bi-person-lock"></i>
-                            <span><strong>Administração</strong></span>
-                        </a>
-                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </aside>
-        <div class="main">
-            <nav class="navbar navbar-expand px-4 py-2">
-                <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
-                  <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
-                  <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
-                </a>
-            </nav>
-            <main class="content px-3 py-4">
-                {% if messages %}
-                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
-                    {% for message in messages %}
-                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                      </div>
-                    {% endfor %}
+                    <div class="my-3 mx-3">
+                      Exibindo <b id="count-start">{{ page_obj.start_index }}</b>-<b id="count-end">{{ page_obj.end_index }}</b>
+                      de <b id="count-total">{{ page_obj.paginator.count }}</b> itens.
+                    </div>
                   </div>
-                {% endif %}
-                <div class="container-fluid">
-                    <div class="mb-3">
-                        <div class="row">
-                            <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
-                                <div class="breadcrumb-div py-3 border-1">
-                                    <ol class="breadcrumb my-1 mx-2 px-3">
-                                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">Usuários</li>
-                                    </ol>
-                                    <h1 class="fw-bold fs-2 mx-5 mt-3">Usuário</h1>
+                </div>
+
+                <div class="col-12 col-lg-12 col-md-12 mb-4">
+                  <div class="table-div-all py-3 px-3 border-1">
+                    <div class="table-responsive">
+                      <table class="table table-striped table-hover align-middle small">
+                        <thead>
+                          <tr>
+                            <th width="220px">Nome</th>
+                            <th width="220px">Login</th>
+                            <th width="220px">Email</th>
+                            <th width="120px">Data de Entrada</th>
+                            <th width="120px">Data de Saída</th>
+                            <th width="120px">Perfil</th>
+                            <th width="120px">Status</th>
+                            <th class="text-center" width="70px">&nbsp;</th>
+                          </tr>
+                          <tr class="filters">
+                            <td><input type="text" class="form-control form-control-sm" id="name-filter"   placeholder=""></td>
+                            <td><input type="text" class="form-control form-control-sm" id="login-filter"  placeholder=""></td>
+                            <td><input type="text" class="form-control form-control-sm" id="email-filter"  placeholder=""></td>
+
+                            <td>
+                              <div class="input-group position-relative">
+                                <span class="input-group-text" role="button" aria-label="Abrir calendário"><i class="bi bi-calendar3"></i></span>
+                                <input type="date" id="time-in-native" class="calendar-overlay" aria-label="Calendário nativo Entrada">
+                                <input type="text" id="time-in-filter" class="form-control form-control-sm date-br" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA" maxlength="10">
+                              </div>
+                            </td>
+
+                            <td>
+                              <div class="input-group position-relative">
+                                <span class="input-group-text" role="button" aria-label="Abrir calendário"><i class="bi bi-calendar3"></i></span>
+                                <input type="date" id="time-out-native" class="calendar-overlay" aria-label="Calendário nativo Saída">
+                                <input type="text" id="time-out-filter" class="form-control form-control-sm date-br" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA" maxlength="10">
+                              </div>
+                            </td>
+
+                            <td><input type="text" class="form-control form-control-sm" id="profile-filter" placeholder=""></td>
+                            <td><input type="text" class="form-control form-control-sm" id="status-filter"  placeholder=""></td>
+                            <td></td>
+                          </tr>
+                        </thead>
+
+                        <tbody id="users-body">
+                          {% for user in users_l %}
+                            <tr>
+                              <td>{{ user.get_full_name|default:user.username }}</td>
+                              <td>{{ user.username }}</td>
+                              <td>{{ user.email }}</td>
+                              <td>{{ user.u_time_in|date:'d/m/Y' }}</td>
+                              <td>{{ user.u_time_out|date:'d/m/Y' }}</td>
+
+                              <td>
+                                {% with groups=user.groups.all %}
+                                  {% if groups %}
+                                    {% for g in groups %}
+                                      {% if not forloop.first %}, {% endif %}{{ g.name }}
+                                    {% endfor %}
+                                  {% else %}—{% endif %}
+                                {% endwith %}
+                              </td>
+
+                              <td>{{ user.u_status }}</td>
+                              <td class="text-end">
+                                <div class="d-flex justify-content-end">
+                                  <div class="btn-group" role="group">
+                                    <a href="{% url 'user_edit' user.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
                                   </div>
                                 </div>
-                                <div class="col-12 col-lg-12 col-md-12">
-                                  <div class="table-div-all py-3 px-3 border-1">
-                                      <div class="small mt-3 mx-3">
-                                        <a href="{% url 'user_access' %}" class="btn btn-primary"><strong>Conceder Acesso</strong></a>
-                                      </div>
-                                      <div class="my-3 mx-3">
-                                        Exibindo <b id="count-start">{{ page_obj.start_index }}</b>-<b id="count-end">{{ page_obj.end_index }}</b> de <b id="count-total">{{ page_obj.paginator.count }}</b> itens.
-                                      </div>  
-                                      <hr class="mx-1 mb-4">
-                                      <div class="table-responsive">
-                                        <table class="table table-striped table-hover align-middle small">
-                                          <thead>
-                                            <tr>
-                                              <th width="220px"><a>Nome</a></th>
-                                              <th width="220px"><a>Login</a></th>
-                                              <th width="220px"><a>Email</a></th>
-                                              <th width="120px"><a>Data de Entrada</a></th>
-                                              <th width="120px"><a>Data de Saída</a></th>
-                                              <th width="120px"><a>Perfil</a></th>
-                                              <th width="120px"><a>Status</a></th>
-                                              <th class="text-center" width="70px">&nbsp;</th>
-                                            </tr>
-                                            <tr class="filters">
-                                              <td><input type="text" class="form-control form-control-sm" id="name-filter" placeholder="" /></td>
-                                              <td><input type="text" class="form-control form-control-sm" id="login-filter" placeholder="" /></td>
-                                              <td><input type="text" class="form-control form-control-sm" id="email-filter" placeholder="" /></td>
-                                              <td><input type="text" class="form-control form-control-sm" id="time-in-filter" placeholder="" /></td>
-                                              <td><input type="text" class="form-control form-control-sm" id="time-out-filter" placeholder="" /></td>
-                                              <td><input type="text" class="form-control form-control-sm" id="profile-filter" placeholder="" /></td>
-                                              <td><input type="text" class="form-control form-control-sm" id="status-filter" placeholder="" /></td>
-                                              <td></td>
-                                            </tr>
-                                          </thead>
-                                          <tbody id="users-body">
-                                            {% for user in users_l %}
-                                              <tr>
-                                                <td>{{ user.u_name }}</td>
-                                                <td>{{ user.u_login }}</td>
-                                                <td>{{ user.u_email }}</td>
-                                                <td>{{ user.u_time_in|date:'d/m/Y' }}</td>
-                                                <td>{{ user.u_time_out|date:'d/m/Y' }}</td>
-                                                <td>{{ user.u_profile }}</td>
-                                                <td>{{ user.u_status }}</td>
-                                                <td>
-                                                  <div class="d-flex justify-content-end">
-                                                    <div class="btn-group" role="group" aria-label="Ações">
-                                                      <a href="{% url 'user_edit' user.u_id %}" class="btn btn-sm btn-outline-primary">Editar</a>
-                                                    </div>
-                                                  </div>
-                                                </td>
-                                              </tr>
-                                            {% empty %}
-                                              <tr><td colspan="8">Nenhum usuário encontrado.</td></tr>
-                                            {% endfor %}
-                                          </tbody>
-                                        </table>
-                                      </div>
-                                    <nav aria-label="Page navigation example" class="mt-3">
-                                        <ul class="pagination justify-content-center" id="pagination">
-                                            {% if page_obj.has_previous %}
-                                              <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
-                                            {% else %}
-                                              <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-                                            {% endif %}
-                                            {% for num in page_obj.paginator.page_range %}
-                                            {% if page_obj.number == num %}
-                                              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                                            {% else %}
-                                              <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                                            {% endif %}
-                                            {% endfor %}
-                                            {% if page_obj.has_next %}
-                                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
-                                            {% else %}
-                                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-                                            {% endif %}
-                                        </ul>
-                                    </nav>
-                                </div>
-                            </div>
-                        </div>
+                              </td>
+                            </tr>
+                          {% empty %}
+                            <tr><td colspan="8">Nenhum usuário encontrado.</td></tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
                     </div>
+                  </div>
                 </div>
-            </main>
-            <footer class="footer d-flex justify-content-center align-items-center">
-                <div class="container-fluid">
-                    <div class="row text-body-secondary align-items-center justify-content-center">
-                        <div class="col-6 text-center pt-2">
-                            <a class="text-body-secondary" href="#">
-                                <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+
+                <nav class="mt-4" aria-label="Page navigation" id="pag">
+                  <ul class="pagination justify-content-center" id="pagination">
+                    {% if page_obj.has_previous %}
+                      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                    {% else %}
+                      <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    {% endif %}
+
+                    {% if page_obj.number < 10 %}
+                      {% for num in page_obj.paginator.page_range %}
+                        {% if num <= 10 %}
+                          {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                          {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    {% else %}
+                      {% for num in page_obj.paginator.page_range %}
+                        {% if num >= page_obj.number|add:"-9" and num <= page_obj.number %}
+                          {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                          {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                          {% endif %}
+                          {% endif %}
+                          {% endfor %}
+                          {% endif %}
+                          
+                          {% if page_obj.has_next %}
+                          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                          {% else %}
+                          <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                          {% endif %}
+                        </ul>
+                      </nav>
+              </div>
+            </div>
+
+          </div>
         </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
-    <script src="{% static 'js/script.js' %}"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-            const msgContainer = document.getElementById('msg-container');
-            if (msgContainer) {
-                setTimeout(() => {
-                [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
-                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                    bsAlert.close();
-                });
-                }, 8000);
-            }
-            });
-        </script>
-    <script>
-      (function () {
-        function getCookie(name) {
-          const value = `; ${document.cookie}`;
-          const parts = value.split(`; ${name}=`);
-          if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
-          return null;
-        }
+<script src="{% static 'js/script.js' %}"></script>
 
-        const CSRF_COOKIE_CANDIDATES = ['app_csrf', 'csrftoken'];
-
-        function getCSRFCookie() {
-          for (const n of CSRF_COOKIE_CANDIDATES) {
-            const v = getCookie(n);
-            if (v) return v;
-          }
-          return null;
-        }
-
-        function needsCSRF(method) {
-          return !/^(GET|HEAD|OPTIONS|TRACE)$/i.test(method || 'GET');
-        }
-
-        if (window.jQuery && $.ajaxSetup) {
-          $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-              xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-              const method = (settings.type || settings.method || 'GET').toUpperCase();
-              if (needsCSRF(method)) {
-                const token = getCSRFCookie();
-                if (token) xhr.setRequestHeader('X-CSRFToken', token);
-              }
-            }
-          });
-        }
-
-        window.safeFetch = function (url, options = {}) {
-          const opts = { ...options };
-          const method = (opts.method || 'GET').toUpperCase();
-
-          const headers = new Headers(opts.headers || {});
-          headers.set('X-Requested-With', 'XMLHttpRequest');
-
-          if (needsCSRF(method)) {
-            const token = getCSRFCookie();
-            if (token) headers.set('X-CSRFToken', token);
-          }
-
-          opts.headers = headers;
-          return fetch(url, opts);
-        };
-      })();
-    </script>
-
-    <script>
-    $(document).ready(function () {
-      let ajaxEnabled = false;
-
-      function loadUsers(page = 1) {
-        ajaxEnabled = true;
-
-        const data = {
-          name: $('#name-filter').val(),
-          login: $('#login-filter').val(),
-          email: $('#email-filter').val(),
-          time_in: $('#time-in-filter').val(),
-          time_out: $('#time-out-filter').val(),
-          profile: $('#profile-filter').val(),
-          status: $('#status-filter').val(),
-          page: page
-        };
-
-        $.ajax({
-          url: "{% url 'user_list' %}",
-          data: data,
-          dataType: 'json',
-          success: function(data) {
-            let tbody = $('#users-body');
-            tbody.empty();
-
-            if (data.results.length > 0) {
-              $.each(data.results, function(index, user) {
-                tbody.append(
-                  `<tr>
-                    <td>${user.name}</td>
-                    <td>${user.login}</td>
-                    <td>${user.email}</td>
-                    <td>${user.time_in}</td>
-                    <td>${user.time_out}</td>
-                    <td>${user.profile}</td>
-                    <td>${user.status}</td>
-                    <td>
-                      <div class="d-flex justify-content-end">
-                        <div class="btn-group" role="group">
-                          <a href="/administrador/usuario/${user.id}/editar/" class="btn btn-sm btn-outline-primary">Editar</a>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>`
-                );
-              });
-            } else {
-              tbody.append('<tr><td colspan="8">Nenhum usuário encontrado.</td></tr>');
-            }
-
-            $('#count-start').text(data.start_index);
-            $('#count-end').text(data.end_index);
-            $('#count-total').text(data.count);
-
-            let pagination = $('#pagination');
-            pagination.empty();
-
-            if (data.current_page > 1) {
-              pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${data.current_page - 1}">&laquo;</a></li>`);
-            } else {
-              pagination.append('<li class="page-item disabled"><span class="page-link">&laquo;</span></li>');
-            }
-
-            for (let i = 1; i <= data.num_pages; i++) {
-              if (i === data.current_page) {
-                pagination.append(`<li class="page-item active"><span class="page-link">${i}</span></li>`);
-              } else {
-                pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`);
-              }
-            }
-
-            if (data.current_page < data.num_pages) {
-              pagination.append(`<li class="page-item"><a class="page-link" href="#" data-page="${data.current_page + 1}">&raquo;</a></li>`);
-            } else {
-              pagination.append('<li class="page-item disabled"><span class="page-link">&raquo;</span></li>');
-            }
-          }
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const msgContainer = document.getElementById('msg-container');
+    if (msgContainer) {
+      setTimeout(() => {
+        [...msgContainer.querySelectorAll('.alert')].forEach(alert => {
+          const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+          bsAlert.close();
         });
-      }
+      }, 5000);
+    }
+  });
+</script>
+<script>
+  const pad2 = n => String(n).padStart(2,'0');
 
+  function parseDateBrToDate(v){
+    if(!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return null;
+    const [d,m,y] = v.split('/').map(Number);
+    const dt = new Date(y, m-1, d, 0,0,0,0);
+    if(dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d) return null;
+    return dt;
+  }
+  function toISODateFromBr(v){
+    const dt = parseDateBrToDate(v);
+    if(!dt) return '';
+    return `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
+  }
+  function formatDateBr(d){ return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; }
 
-      $('input[type="text"]').on('input', function () {
-        loadUsers();
-      });
+  function attachDateBrMask({ textInput, nativeInput, minToday=false, onChange=null }){
+    if(!textInput || !nativeInput) return;
 
-      $('.pagination').on('click', 'a.page-link', function (e) {
-        if (ajaxEnabled) {
-          e.preventDefault();
-          const page = $(this).data('page');
-          if (page) loadUsers(page);
-        }
-      });
+    if(minToday){
+      const t = new Date(); t.setHours(0,0,0,0);
+      nativeInput.min = `${t.getFullYear()}-${pad2(t.getMonth()+1)}-${pad2(t.getDate())}`;
+    }
+
+    function mapRawIndexToFormatted(rawIdx){ let pos = rawIdx; if(pos>2) pos+=1; if(pos>4) pos+=1; return pos; }
+    function formatFrom(value, caret){
+      const raw = value.replace(/\D/g,'').slice(0,8); 
+      const rawBefore = value.slice(0,(caret ?? value.length)).replace(/\D/g,'').length;
+      let f = '';
+      if      (raw.length <= 2) f = raw;
+      else if (raw.length <= 4) f = raw.slice(0,2)+'/'+raw.slice(2);
+      else                      f = raw.slice(0,2)+'/'+raw.slice(2,4)+'/'+raw.slice(4);
+      let newCaret = mapRawIndexToFormatted(rawBefore);
+      if(newCaret > f.length) newCaret = f.length;
+      return { formatted:f, newCaret };
+    }
+
+    textInput.addEventListener('keydown', (ev)=>{
+      const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'];
+      const val = textInput.value;
+      const pos = textInput.selectionStart ?? 0;
+      if (ev.key === 'Backspace' && pos>0 && val[pos-1] === '/'){ ev.preventDefault(); textInput.setSelectionRange(pos-1,pos-1); return; }
+      if (ev.key === 'Delete' && val[pos] === '/'){ ev.preventDefault(); textInput.setSelectionRange(pos+1,pos+1); return; }
+      if (allowed.includes(ev.key)) return;
+      if (/^\d$/.test(ev.key)) return;
+      if (ev.ctrlKey || ev.metaKey) return;
+      ev.preventDefault();
     });
-    </script>
-    </body>
+
+    function reformatAndSync(){
+      const caret = textInput.selectionStart ?? textInput.value.length;
+      const { formatted, newCaret } = formatFrom(textInput.value, caret);
+      textInput.value = formatted;
+      try { textInput.setSelectionRange(newCaret, newCaret); } catch(_){}
+      const iso = toISODateFromBr(textInput.value);
+      nativeInput.value = iso || '';
+      if (typeof onChange === 'function') onChange();
+    }
+    textInput.addEventListener('input', reformatAndSync);
+
+    textInput.addEventListener('paste', (e)=>{
+      e.preventDefault();
+      const txt = (e.clipboardData || window.clipboardData).getData('text') || '';
+      const raw = txt.replace(/\D/g,'').slice(0,8);
+      let f = '';
+      if      (raw.length <= 2) f = raw;
+      else if (raw.length <= 4) f = raw.slice(0,2)+'/'+raw.slice(2);
+      else                      f = raw.slice(0,2)+'/'+raw.slice(2,4)+'/'+raw.slice(4);
+      textInput.value = f;
+      const end = textInput.value.length;
+      try { textInput.setSelectionRange(end,end); } catch(_){}
+      reformatAndSync();
+    });
+
+    nativeInput.addEventListener('change', () => {
+      if (!nativeInput.value) {
+        textInput.value = '';
+        if (typeof onChange === 'function') onChange();
+        return;
+      }
+      const [y, m, d] = nativeInput.value.split('-').map(Number);
+      const picked = new Date(y, m - 1, d, 0, 0, 0, 0);
+      textInput.value = formatDateBr(picked);
+      if (typeof onChange === 'function') onChange();
+    });
+    nativeInput.addEventListener('input', () => {
+      if (!nativeInput.value) {
+        textInput.value = '';
+        if (typeof onChange === 'function') onChange();
+      }
+    });
+
+    const wrapper = textInput.closest('.input-group.position-relative') || textInput.parentElement;
+    wrapper.addEventListener('click', (e)=>{
+      if (e.target === textInput) return;
+      if (typeof nativeInput.showPicker === 'function') nativeInput.showPicker();
+      else { nativeInput.focus(); nativeInput.click(); }
+    });
+  }
+</script>
+
+<script>
+$(function () {
+  const urlList = "{% url 'user_list' %}";
+
+  const DROPDOWNS = [
+    { id: '#name-filter',    param: 'name',    key: 'name',    label: 'Nome' },
+    { id: '#login-filter',   param: 'login',   key: 'login',   label: 'Login' },
+    { id: '#email-filter',   param: 'email',   key: 'email',   label: 'Email' },
+    { id: '#profile-filter', param: 'profile', key: 'profile', label: 'Perfil' },
+    { id: '#status-filter',  param: 'status',  key: 'status',  label: 'Status' },
+  ];
+  const DATE_INPUTS = [
+    { id:'#time-in-filter',  param:'time_in'  },
+    { id:'#time-out-filter', param:'time_out' },
+  ];
+  const ALL_FIELDS = [
+    ...DROPDOWNS.map(({id,param}) => ({id,param})),
+    ...DATE_INPUTS
+  ];
+
+  const optionTokens = Object.fromEntries(DROPDOWNS.map(f => [f.param, 0]));
+  let latestLoadToken = 0;
+  let pendingCloseParam = null;
+
+  const esc = (s) => (s ?? '').toString()
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const uniqPush = (set, arr, v) => { if (!set.has(v) && v !== '') { set.add(v); arr.push(v); } };
+
+  function buildParams(page=1){
+    const p = { page, ajax:1, _ts:Date.now() };
+    ALL_FIELDS.forEach(f => p[f.param] = $(f.id).val() || '');
+    return p;
+  }
+  function fetchPage(params){
+    return $.ajax({
+      url: urlList, data: params, dataType:'json', cache:false,
+      beforeSend: xhr => xhr.setRequestHeader('X-Requested-With','XMLHttpRequest')
+    });
+  }
+
+  function ensureDropdown(field){
+    const $orig = $(field.id);
+    if (!$orig.length || $orig.data('enhanced')) return;
+
+    const id = $orig.attr('id');
+    const currentVal = ($orig.val && $orig.val()) || '';
+
+    const $wrap = $(`
+      <div class="dropdown w-100" data-bs-boundary="viewport">
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary w-100 text-truncate"
+                data-bs-toggle="dropdown"
+                data-bs-auto-close="outside"
+                data-bs-display="static"
+                aria-expanded="false"
+                title="${esc(field.label)}">Todos</button>
+        <ul class="dropdown-menu filtro-menu w-100 p-0" data-param="${field.param}"></ul>
+        <input type="hidden" id="${id}">
+      </div>
+    `);
+    $orig.replaceWith($wrap);
+    $wrap.find('input[type="hidden"]').val(currentVal);
+    $wrap.data('enhanced', true);
+    rebuildDropdownOptions(field, [], false);
+  }
+  function els(field){
+    const $hidden = $(field.id);
+    const $wrap   = $hidden.closest('.dropdown');
+    return { $hidden, $wrap, $menu:$wrap.find('.dropdown-menu'), $btn:$wrap.find('[data-bs-toggle="dropdown"]') };
+  }
+  function setDropdownLoading(field){
+    const { $menu } = els(field);
+    $menu.html(`
+      <li><button type="button" class="dropdown-item" data-value="">Todos</button></li>
+      <li><div class="px-3 py-2 small text-body-secondary">Carregando opções…</div></li>
+    `);
+  }
+  function rebuildDropdownOptions(field, values, keepSelection){
+    const { $menu, $hidden, $btn } = els(field);
+    const prev = (keepSelection ? $hidden.val() : '') || '';
+    let html = `<li><button type="button" class="dropdown-item${prev===''?' active':''}" data-value="">Todos</button></li>`;
+    values.forEach(v => {
+      const act = (v === prev) ? ' active' : '';
+      html += `<li><button type="button" class="dropdown-item${act}" data-value="${esc(v)}" title="${esc(v)}">${esc(v)}</button></li>`;
+    });
+    $menu.html(html);
+    $btn.text(prev || 'Todos').attr('title', prev || 'Todos');
+  }
+  $(document).on('show.bs.dropdown', '.dropdown', function(){
+    const $menu = $(this).find('.dropdown-menu');
+    const rect  = this.getBoundingClientRect();
+    const avail = Math.max(120, Math.floor(window.innerHeight - rect.bottom - 8));
+    $menu.css({ 'max-height': `${avail}px`, 'overflow-y': 'auto', 'overflow-x': 'hidden' });
+  });
+  $(document).on('click', '.dropdown-menu[data-param] .dropdown-item', function(e){
+    e.preventDefault();
+    const $menu = $(this).closest('.dropdown-menu');
+    const param = $menu.data('param');
+    const field = DROPDOWNS.find(f => f.param === param);
+    if (!field) return;
+
+    const value = $(this).data('value') || '';
+    const { $hidden, $btn } = els(field);
+
+    $menu.find('.dropdown-item.active').removeClass('active');
+    $(this).addClass('active');
+
+    $hidden.val(value).trigger('change');
+    $btn.text(value || 'Todos').attr('title', value || 'Todos');
+
+    pendingCloseParam = field.param;
+  });
+  DROPDOWNS.forEach(ensureDropdown);
+
+  function renderRows(results){
+    const $tbody = $('#users-body').empty();
+    if (!Array.isArray(results) || !results.length){
+      $tbody.append('<tr><td colspan="8">Nenhum usuário encontrado.</td></tr>');
+      return;
+    }
+    results.forEach(u => {
+      $tbody.append(`
+        <tr>
+          <td>${esc(u.name)}</td>
+          <td>${esc(u.login)}</td>
+          <td>${esc(u.email)}</td>
+          <td>${esc(u.time_in || '')}</td>
+          <td>${esc(u.time_out || '')}</td>
+          <td>${esc(u.profile)}</td>
+          <td>${esc(u.status)}</td>
+          <td class="text-end">
+            <div class="d-flex justify-content-end">
+              <div class="btn-group" role="group">
+                <a href="${u.edit_url || '/administrador/usuario/' + u.id + '/editar/'}" class="btn btn-sm btn-outline-primary">Editar</a>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `);
+    });
+  }
+  function renderCounters(start, end, total){
+    $('#count-start').text(start ?? 0);
+    $('#count-end').text(end ?? 0);
+    $('#count-total').text(total ?? 0);
+  }
+  function renderPagination(current, total){
+    const pag = document.getElementById('pagination');
+    if (!pag) return;
+    pag.innerHTML = '';
+
+    const start = Math.max(1, current - 9);
+    const end   = Math.min(total, start + 9);
+
+    if (current > 1) {
+      pag.innerHTML += `
+        <li class="page-item">
+          <a class="page-link" href="?page=${current - 1}" data-page="${current - 1}" aria-label="Anterior">&laquo;</a>
+        </li>`;
+    } else {
+      pag.innerHTML += `
+        <li class="page-item disabled">
+          <span class="page-link" aria-disabled="true">&laquo;</span>
+        </li>`;
+    }
+
+    for (let i = start; i <= end; i++) {
+      if (i === current) {
+        pag.innerHTML += `
+          <li class="page-item active" aria-current="page">
+            <span class="page-link">${i}</span>
+          </li>`;
+      } else {
+        pag.innerHTML += `
+          <li class="page-item">
+            <a class="page-link" href="?page=${i}" data-page="${i}">${i}</a>
+          </li>`;
+      }
+    }
+
+    if (current < total) {
+      pag.innerHTML += `
+        <li class="page-item">
+          <a class="page-link" href="?page=${current + 1}" data-page="${current + 1}" aria-label="Próxima">&raquo;</a>
+        </li>`;
+    } else {
+      pag.innerHTML += `
+        <li class="page-item disabled">
+          <span class="page-link" aria-disabled="true">&raquo;</span>
+        </li>`;
+    }
+  }
+  function returnDropdownToPlace(){
+    if (!pendingCloseParam) return;
+    const field = DROPDOWNS.find(f => f.param === pendingCloseParam);
+    if (!field){ pendingCloseParam = null; return; }
+    const { $wrap, $menu, $hidden } = els(field);
+    const btnEl = $wrap.find('[data-bs-toggle="dropdown"]')[0];
+    if (btnEl) bootstrap.Dropdown.getOrCreateInstance(btnEl).hide();
+    const selected = $hidden.val() || '';
+    if (selected) rebuildDropdownOptions(field, [selected], true);
+    $menu.scrollTop(0);
+    pendingCloseParam = null;
+  }
+
+  async function refreshOptionsForField(field){
+    const { $hidden } = els(field);
+    const selected = $hidden.val() || '';
+    if (selected){ rebuildDropdownOptions(field, [selected], true); return; }
+
+    const token = ++optionTokens[field.param];
+    const base = buildParams(1);
+    delete base.page; delete base.ajax; delete base._ts;
+    base[field.param] = '';
+
+    setDropdownLoading(field);
+    try{
+      const first = await fetchPage({ ...base, page:1, ajax:1, _ts:Date.now() });
+      if (token !== optionTokens[field.param]) return;
+
+      const totalPages = Math.max(1, first.num_pages || 1);
+      const seen = new Set(); const values = [];
+      (first.results || []).forEach(r => uniqPush(seen, values, (r[field.key] || '').toString()));
+      rebuildDropdownOptions(field, values, true);
+
+      if (totalPages > 1){
+        const reqs = [];
+        for (let p=2;p<=totalPages;p++){
+          reqs.push(fetchPage({ ...base, page:p, ajax:1, _ts:Date.now() }).then(pg=>{
+            if (token !== optionTokens[field.param]) return;
+            const adds = [];
+            (pg.results || []).forEach(r=>{
+              const v = (r[field.key] || '').toString();
+              if (v && !seen.has(v)){ seen.add(v); adds.push(v); }
+            });
+            if (adds.length){ values.push(...adds); rebuildDropdownOptions(field, values, true); }
+          }).catch(()=>{}));
+        }
+        await Promise.allSettled(reqs);
+      }
+    } finally {
+      const { $menu } = els(field);
+      $menu.find('.text-body-secondary:contains("Carregando")').closest('li').remove();
+    }
+  }
+  async function refreshAllOptions(){ await Promise.allSettled(DROPDOWNS.map(refreshOptionsForField)); }
+
+  function loadUsers(page=1){
+    const token = ++latestLoadToken;
+    const params = buildParams(page);
+    fetchPage(params).done(async data=>{
+      if (token !== latestLoadToken) return;
+      renderRows(data.results || []);
+      renderCounters(data.start_index ?? 0, data.end_index ?? 0, data.count ?? 0);
+      renderPagination(data.current_page ?? 1, data.num_pages ?? 1);
+      await refreshAllOptions();
+      returnDropdownToPlace();
+    }).fail(()=>{
+      $('#users-body').html('<tr><td colspan="8">Erro ao carregar dados.</td></tr>');
+    });
+  }
+
+  DROPDOWNS.forEach(f => $(document).on('change', f.id, ()=>loadUsers(1)));
+
+  let debounceDates = null;
+  function triggerDateSearch(){ clearTimeout(debounceDates); debounceDates = setTimeout(()=>loadUsers(1), 200); }
+  $('#time-in-filter, #time-out-filter')
+    .on('input change blur', triggerDateSearch)
+    .on('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); loadUsers(1); } });
+
+  attachDateBrMask({
+    textInput: document.getElementById('time-in-filter'),
+    nativeInput: document.getElementById('time-in-native'),
+    minToday: false,
+    onChange: triggerDateSearch
+  });
+  attachDateBrMask({
+    textInput: document.getElementById('time-out-filter'),
+    nativeInput: document.getElementById('time-out-native'),
+    minToday: false,
+    onChange: triggerDateSearch
+  });
+
+  $(document).on('click', '#pagination a.page-link', function(e){
+    e.preventDefault();
+
+    let page = Number($(this).data('page'));
+
+    if (!page) {
+      const href = $(this).attr('href') || '';
+      const qs   = href.split('?')[1] || '';
+      const pStr = new URLSearchParams(qs).get('page');
+      page = pStr ? parseInt(pStr, 10) : 0;
+    }
+
+    if (page) loadUsers(page);
+  });
+
+  loadUsers(1);
+});
+</script>
+</body>
 </html>

@@ -1,255 +1,349 @@
 import logging
 import os
-import ipaddress, socket
 import jwt
+import re
 
 from django.views.decorators.http import require_GET
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.utils import timezone
 from django.http import JsonResponse
 from core.decorators import only_administrador
-from django.views.decorators.csrf import csrf_protect
-from core.models import Establishment, Document, Users, RelationCenterUser, RelationCenterDoc, Attachment, Audit, SecurityEvent
-from core.forms.administrador.form_create_adm import DCreateForm, RCDCreateForm, NDESTCreateForm
+from core.models import Establishment, Document, User, RelationCenterUser, RelationCenterDoc, Attachment, Audit
+from core.forms.administrador.form_create_adm import DCreateForm, RCDCreateForm, NDESTCreateForm, OverAttachmentForm, RCUCreateForm
 from django.db import transaction
+from django.db.models import OuterRef, Subquery, F
 from django.core.exceptions import ValidationError
 from django.views.decorators.http import require_POST
 from django.conf import settings
+from django.db.models.functions import Lower
 from django.views.decorators.http import require_http_methods
-from core.forms.administrador.form_create_adm import AttachmentForm
+from core.forms.administrador.form_create_adm import AttachmentForm, RCUCreateForm, DCreateForm, NDESTCreateForm, RCDCreateForm, OverAttachmentForm 
 from django.db import transaction, IntegrityError
-from core.utils.search import clean_search_q
-from core.utils.security import enforce_content_type, get_client_ip
+from django.core.exceptions import MultipleObjectsReturned
 
 MAX_ATTEMPTS = 5
 BLOCK_DURATION = 30 * 60
 
 logger = logging.getLogger(__name__)
 
-@csrf_protect
 @only_administrador
 @require_http_methods(["GET", "POST"])
 def document_create(request):
-    # Sanitização defensiva de parâmetros de consulta (evita triggering em middlewares/WAF)
-    _ = clean_search_q(request.GET.get('q'))
-
     if request.method == 'POST':
-        # Garante Content-Type esperado para rotas de formulário
-        if not enforce_content_type(request, form_paths=('/administrador/',)):
-            return JsonResponse({"error": "Content-Type não permitido"}, status=415)
-
         form = DCreateForm(request.POST)
         if form.is_valid():
             try:
                 with transaction.atomic():
-                    document = form.save(commit=False)
-                    document.d_doc = (document.d_doc or '').strip()[:50]
-                    document.save()
-
-                    user_id = request.session.get('user_id')
-                    user = Users.objects.get(u_id=user_id, u_status='Ativo')
+                    document = form.save()
+                    groups = list(request.user.groups.values_list('name', flat=True))
+                    if request.user.is_superuser or 'Administrador' in groups:
+                        profile = 'Administrador'
+                    else:
+                        profile = ', '.join(groups) or '-'
 
                     Audit.objects.create(
-                        aud_login=user.u_login,
-                        aud_profile=user.u_profile,
+                        aud_login=request.user.get_username(),
+                        aud_profile=profile,
                         aud_action="Cadastro",
                         aud_obj_modified="Documento",
                         aud_description=document.d_doc
                     )
-
-                    ua = (request.META.get('HTTP_USER_AGENT') or '')[:512]
-                    SecurityEvent.objects.create(
-                        sec_action=SecurityEvent.ActionType.OTHER,
-                        sec_description="Documento criado",
-                        sec_ip=get_client_ip(request),
-                        sec_user_agent=ua,
-                        sec_payload=(document.d_doc or '')[:64]
-                    )
-
                 messages.success(request, 'Documento cadastrado com sucesso.')
                 return redirect('document_list')
-
             except IntegrityError:
                 form.add_error('d_doc', 'Já existe um documento com este nome.')
-            except Users.DoesNotExist:
-                request.session.flush()
-                return redirect('login')
             except Exception:
                 logger.exception("Falha ao cadastrar documento")
-                messages.error(request, 'Erro ao cadastrar. Tente novamente.')
+                messages.warning(request, 'Erro ao cadastrar. Tente novamente.')
     else:
         form = DCreateForm()
-
     return render(request, 'main/administrador/document_create.html', {'form': form})
 
 @only_administrador
 def cnpj_create(request):
-    user_id_session = request.session.get('user_id')
-    try:
-        user_session = Users.objects.get(u_id=user_id_session, u_status='Ativo')
-    except Users.DoesNotExist:
-        messages.error(request, "Usuário não encontrado ou inativo.")
-        return redirect('login_view')
-
-    if request.method == 'POST':
+    user = request.user
+    if request.method == "POST":
         form = NDESTCreateForm(request.POST)
         if form.is_valid():
-            with transaction.atomic():
-                ndest = form.save()
-
-                Audit.objects.create(
-                    aud_login=user_session.u_login,
-                    aud_profile=user_session.u_profile,
-                    aud_action="Cadastro",
-                    aud_obj_modified="Nº Documento",
-                    aud_description=(
-                        f"{ndest.ndest_fk_establishment.est_center} | "
-                        f"(Unidade: {ndest.ndest_units}) - (CNPJ: {ndest.ndest_cnpj}) - "
-                        f"(NIRE: {ndest.ndest_nire}) - "
-                        f"(Inscrição Estadual: {ndest.ndest_reg_state}) - "
-                        f"(Inscrição Municipal: {ndest.ndest_reg_city})"
-                    ),
-                )
-                messages.success(request, "Números de unidade cadastrados com sucesso.")
-                return redirect('cnpj_list')
+            try:
+                with transaction.atomic():
+                    ndest = form.save()
+                    group = user.groups.first().name if user.groups.exists() else "Sem Acesso"
+                    Audit.objects.create(
+                        aud_login=user.username,          
+                        aud_profile=group,
+                        aud_action="Cadastro",
+                        aud_obj_modified="Unidade",
+                        aud_description=(
+                            f"{ndest.ndest_fk_establishment.est_center} • "
+                            f" Unidade: {ndest.ndest_units} | (CNPJ: {ndest.ndest_cnpj} | "
+                            f" NIRE: {ndest.ndest_nire} | "
+                            f" Inscrição Estadual: {ndest.ndest_reg_state} | "
+                            f" Inscrição Municipal: {ndest.ndest_reg_city}"
+                        ),
+                    )
+                    messages.success(request, "Unidade cadastrada com sucesso.")
+                    return redirect("cnpj_list")
+            except IntegrityError:
+                messages.warning(request, "Registro duplicado ou conflito de integridade.")
+            except Exception:
+                logger.exception("Falha ao cadastrar número de documento/estabelecimento.")
+                messages.warning(request, "Erro ao cadastrar. Tente novamente.")
     else:
         form = NDESTCreateForm()
-    return render(request, 'main/administrador/cnpj_create.html', {
-        'form': form
-    })
-    
+    return render(request, "main/administrador/cnpj_create.html", {"form": form})
+
 @only_administrador
+@require_http_methods(["GET", "POST"])
 def center_user_create(request):
-    user_id_session = request.session.get('user_id')
-    if not user_id_session:
-        return redirect('login_view')
-    try:
-        user_session = Users.objects.get(u_id=user_id_session, u_status='Ativo')
-    except Users.DoesNotExist:
-        messages.error(request, "Usuário não encontrado ou inativo.")
-        return redirect('login_view')
+    users_qs = (
+        User.objects.filter(
+            is_active=True, u_status="Ativo",
+            groups__name__in=["Usuário", "Gerente Regional"]
+        ).distinct().order_by("username")
+    )
+    centers_qs = Establishment.objects.order_by("est_center")
 
-    establishments = Establishment.objects.all()
-    users = Users.objects.exclude(u_profile__in=["Sem Acesso", "Administrador", "Auditor"])
-    regions = Establishment.objects.values_list('est_region', flat=True).distinct()
-    states = Establishment.objects.values_list('est_state', flat=True).distinct()
-    user_profiles = {user.u_login: user.u_profile for user in users}
+    # Pré-seleção só no GET (UI)
+    selected_user = None
+    if request.method == "GET":
+        uid_from_req = request.GET.get("user")
+        if uid_from_req:
+            selected_user = users_qs.filter(id=uid_from_req).first()
 
-    if request.method == 'POST':
-        center = request.POST.get('center') or "-"
-        region = request.POST.get('region') or "-"
-        state = request.POST.get('state') or "-"
-        user_login = request.POST.get('user') or "-"
+    if request.method == "POST":
+        # 1) Ache a instância existente para evitar o erro de unicidade do ModelForm
+        u_id = request.POST.get("rcu_fk_user")
+        e_id = request.POST.get("rcu_fk_estab")
 
-        if not user_login:
-            messages.error(request, 'Por favor, selecione um usuário.')
-        else:
-            selected_key = None
-            selected_value = None
-
-            if center != "-":
-                selected_key = "Estabelecimento"
-                selected_value = center
-            elif region != "-":
-                selected_key = "Região"
-                selected_value = region
-            elif state != "-":
-                selected_key = "Estado"
-                selected_value = state
-
+        existing_rcu = None
+        if u_id and e_id:
             try:
-                sel_user = Users.objects.get(u_login=user_login)
-            except Users.DoesNotExist:
-                messages.error(request, 'Usuário não encontrado.')
-                return redirect('center_user_list')
+                existing_rcu = RelationCenterUser.objects.get(
+                    rcu_fk_user_id=u_id,
+                    rcu_fk_estab_id=e_id,
+                )
+            except RelationCenterUser.DoesNotExist:
+                existing_rcu = None
+            except MultipleObjectsReturned:
+                # Se houver dados antigos duplicados, pega o último
+                existing_rcu = (
+                    RelationCenterUser.objects
+                    .filter(rcu_fk_user_id=u_id, rcu_fk_estab_id=e_id)
+                    .order_by("-rcu_id").first()
+                )
 
-            if not selected_key:
-                messages.error(request, 'Nenhum campo selecionado.')
-            else:
-                RelationCenterUser.objects.create(
-                    rcu_center=center,
-                    rcu_state=state,
-                    rcu_region=region,
-                    rcu_fk_user=sel_user
+        # 2) No POST, NÃO passe selected_user (para não filtrar o queryset!)
+        form = RCUCreateForm(
+            request.POST,
+            users_qs=users_qs,
+            centers_qs=centers_qs,
+            instance=existing_rcu,   # <<<<<< aqui é o pulo do gato
+        )
+
+        if not form.is_valid():
+            for fld, errs in form.errors.items():
+                for e in errs:
+                    messages.error(request, f"{fld}: {e}")
+            return render(request, "main/administrador/center_user_create.html", {"form": form})
+
+        u_obj   = form.cleaned_data["rcu_fk_user"]
+        est_obj = form.cleaned_data["rcu_fk_estab"]
+
+        admin_profile = (
+            "Administrador"
+            if (request.user.is_superuser or request.user.groups.filter(name="Administrador").exists())
+            else ", ".join(request.user.groups.values_list("name", flat=True)) or "-"
+        )
+
+        try:
+            with transaction.atomic():
+                # Reativar se já existe inativo
+                updated = (
+                    RelationCenterUser.objects
+                    .select_for_update()
+                    .filter(rcu_fk_user=u_obj, rcu_fk_estab=est_obj, rcu_active=False)
+                    .update(
+                        rcu_active=True,
+                        rcu_center=est_obj.est_center or "-",
+                        rcu_state=est_obj.est_state or "-",
+                        rcu_region=est_obj.est_region or "-",
+                    )
                 )
-                description = f"{user_login} | {selected_value}"
+                if updated >= 1:
+                    Audit.objects.create(
+                        aud_login=request.user.get_username(),
+                        aud_profile=admin_profile,
+                        aud_action="Reativação de Relação",
+                        aud_obj_modified="Usuário | Estabelecimento",
+                        aud_description=f"{u_obj.get_username()} | {est_obj.est_center}",
+                    )
+                    messages.success(request, "Relação reativada com sucesso.")
+                    return redirect("center_user_list")
+
+                # Criar se não existe nada
+                rcu, created = RelationCenterUser.objects.get_or_create(
+                    rcu_fk_user=u_obj,
+                    rcu_fk_estab=est_obj,
+                    defaults={
+                        "rcu_active": True,
+                        "rcu_center": est_obj.est_center or "-",
+                        "rcu_state": est_obj.est_state or "-",
+                        "rcu_region": est_obj.est_region or "-",
+                    },
+                )
+                if created:
+                    Audit.objects.create(
+                        aud_login=request.user.get_username(),
+                        aud_profile=admin_profile,
+                        aud_action="Cadastro",
+                        aud_obj_modified="Vinculo Usuário",
+                        aud_description=f"{u_obj.get_username()} • {est_obj.est_center}",
+                    )
+                    messages.success(request, "Relação criada com sucesso.")
+                    return redirect("center_user_list")
+
+                # Já existia e está ATIVO
+                if rcu.rcu_active:
+                    messages.warning(request, "Já existe uma relação ativa para este colaborador e estabelecimento.")
+                    return redirect("center_user_list")
+
+                # Caso extremo: existia mas não caiu no update acima; force ativar
+                rcu.rcu_active = True
+                rcu.rcu_center = est_obj.est_center or "-"
+                rcu.rcu_state  = est_obj.est_state or "-"
+                rcu.rcu_region = est_obj.est_region or "-"
+                rcu.save(update_fields=["rcu_active", "rcu_center", "rcu_state", "rcu_region"])
                 Audit.objects.create(
-                    aud_login=user_session.u_login,
-                    aud_profile=user_session.u_profile,
-                    aud_action="Cadastro de Relação",
-                    aud_obj_modified=f"Usuário | {selected_key.title()}",
-                    aud_description=description,
+                    aud_login=request.user.get_username(),
+                    aud_profile=admin_profile,
+                    aud_action="Reativação de Relação",
+                    aud_obj_modified="Usuário | Estabelecimento",
+                    aud_description=f"{u_obj.get_username()} | {est_obj.est_center}",
                 )
-                messages.success(request, 'Relação Estabelecimento/Usuário cadastrada com sucesso.')
-                return redirect('center_user_list')
-    context = {
-        'establishments': establishments,
-        'users': users,
-        'regions': regions,
-        'states': states,
-        'user_profiles': user_profiles,
-    }
-    return render(request, 'main/administrador/center_user_create.html', context)
+                messages.success(request, "Relação reativada com sucesso.")
+                return redirect("center_user_list")
+
+        except Exception:
+            logger.exception("Falha ao salvar relação Estabelecimento/Usuário")
+            messages.error(request, "Erro ao salvar. Tente novamente.")
+            return render(request, "main/administrador/center_user_create.html", {"form": form})
+
+    # GET permanece igual (pode passar selected_user para esconder ATIVOS no combo)
+    initial = {}
+    if selected_user:
+        initial["rcu_fk_user"] = selected_user.id
+    form = RCUCreateForm(
+        users_qs=users_qs,
+        centers_qs=centers_qs,
+        selected_user=selected_user,
+        initial=initial or None,
+    )
+    return render(request, "main/administrador/center_user_create.html", {"form": form})
 
 @only_administrador
+@require_http_methods(["GET", "POST"])
 def center_doc_create(request):
-    user_id_session = request.session.get('user_id')
-    if not user_id_session:
+    # Bloqueia usuário inativo
+    if getattr(request.user, 'u_status', 'Inativo') != 'Ativo':
+        messages.error(request, "Seu usuário está inativo.")
         return redirect('login_view')
 
-    try:
-        user_session = Users.objects.get(u_id=user_id_session, u_status='Ativo')
-    except Users.DoesNotExist:
-        messages.error(request, "Usuário não encontrado ou inativo.")
-        return redirect('login_view')
+    # ---------- AJAX: retorna listas filtradas com base em doc e/ou center ----------
+    if request.method == "GET" and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        doc_id    = request.GET.get("doc") or None
+        center_id = request.GET.get("center") or None
 
-    establishment_l = Establishment.objects.all()
-    document_l = Document.objects.all()
+        centers_qs = Establishment.objects.order_by(Lower('est_center'), 'est_center')
+        docs_qs    = Document.objects.order_by(Lower('d_doc'), 'd_doc')
+
+        # Se veio doc, remove centros já relacionados a esse doc
+        if doc_id:
+            centers_qs = centers_qs.exclude(
+                pk__in=RelationCenterDoc.objects
+                    .filter(rcd_fk_document_id=doc_id)
+                    .values_list('rcd_fk_establishment_id', flat=True)
+            )
+
+        # Se veio center, remove docs já relacionados a esse center
+        if center_id:
+            docs_qs = docs_qs.exclude(
+                pk__in=RelationCenterDoc.objects
+                    .filter(rcd_fk_establishment_id=center_id)
+                    .values_list('rcd_fk_document_id', flat=True)
+            )
+
+        return JsonResponse({
+            "establishments": [
+                {"est_id": e.pk, "est_center": e.est_center or ""}
+                for e in centers_qs
+            ],
+            "documents": [
+                {"doc_id": d.pk, "d_doc": d.d_doc}
+                for d in docs_qs
+            ],
+        })
+    # -------------------------------------------------------------------------------
+
+    establishment_l = Establishment.objects.order_by(Lower('est_center'), 'est_center')
+    document_l      = Document.objects.order_by(Lower('d_doc'), 'd_doc')
 
     if request.method == 'POST':
         form = RCDCreateForm(request.POST)
         if form.is_valid():
-            RelationCenterDoc.objects.create(
-                rcd_fk_establishment=form.cleaned_data['rcd_fk_establishment'],
-                rcd_fk_document=form.cleaned_data['rcd_fk_document']
-            )
+            est = form.cleaned_data['rcd_fk_establishment']
+            doc = form.cleaned_data['rcd_fk_document']
 
-            Audit.objects.create(
-                aud_login=user_session.u_login,
-                aud_profile=user_session.u_profile,
-                aud_action="Cadastro de Relação",
-                aud_obj_modified="Estabelecimento | Documento",
-                aud_description=f"{form.cleaned_data['rcd_fk_establishment']} | {form.cleaned_data['rcd_fk_document']}",
-            )
+            # Defesa extra contra duplicidade
+            if RelationCenterDoc.objects.filter(
+                rcd_fk_establishment=est, rcd_fk_document=doc
+            ).exists():
+                messages.warning(request, 'Esta relação já existe.')
+                return redirect('center_doc_list')
 
-            messages.success(request, 'Relação Estabelecimento/Documento cadastrada com sucesso.')
-            return redirect('center_doc_list')
+            try:
+                with transaction.atomic():
+                    RelationCenterDoc.objects.create(
+                        rcd_fk_establishment=est,
+                        rcd_fk_document=doc
+                    )
+
+                    admin_profile = (
+                        'Administrador' if (
+                            request.user.is_superuser or
+                            request.user.groups.filter(name='Administrador').exists()
+                        )
+                        else ', '.join(request.user.groups.values_list('name', flat=True)) or '-'
+                    )
+
+                    Audit.objects.create(
+                        aud_login=request.user.get_username(),
+                        aud_profile=admin_profile,
+                        aud_action="Cadastro",
+                        aud_obj_modified="Vinculo Documento",
+                        aud_description=f"{est} • {doc}",
+                    )
+
+                messages.success(request, 'Relação Estabelecimento/Documento cadastrada com sucesso.')
+                return redirect('center_doc_list')
+            except Exception:
+                logger.exception("Falha ao cadastrar relação Estabelecimento/Documento")
+                messages.error(request, 'Erro ao cadastrar. Tente novamente.')
         else:
             messages.error(request, "Corrija os erros abaixo.")
     else:
         form = RCDCreateForm()
-        
-    return render(request, 'main/administrador/center_doc_create.html', {
-        'form': form,
-        'establishment_l': establishment_l,
-        'document_l': document_l
-    })
 
-"""
-def is_rate_limited(ip):
-    key = f"rate_limit_{ip}"
-    attempts = cache.get(key, 0)
-    if attempts >= 10:
-        return True
-    cache.set(key, attempts + 1, timeout=1800)
-    return False
-
-    ip = request.META.get('REMOTE_ADDR')
-    if is_rate_limited(ip):
-        messages.error(request, "Tempo de 10minutos excedido para anexação de documento.")
-        return redirect('attachment_list')"""
-
+    return render(
+        request,
+        'main/administrador/center_doc_create.html',
+        {
+            'form': form,
+            'establishment_l': establishment_l,
+            'document_l': document_l,
+        }
+    ) 
+    
 def validate_file(f):
     if f.size > 5 * 1024 * 1024:
         raise ValidationError("Arquivo muito grande (máx 5MB)")
@@ -259,155 +353,248 @@ def validate_file(f):
 @only_administrador
 @require_http_methods(["GET", "POST"])
 def attachment_create(request):
-    user_id = request.session.get('user_id')
-    user = Users.objects.get(u_id=user_id, u_status='Ativo')
+    if getattr(request.user, 'u_status', 'Inativo') != 'Ativo':
+        messages.error(request, "Seu usuário está inativo.")
+        return redirect('login')
+
     region = request.GET.get('region')
-    state = request.GET.get('state')
+    state  = request.GET.get('state')
     center = request.GET.get('center')
+
+    if region and not state and not center:
+        states = (Establishment.objects
+                  .filter(est_region=region)
+                  .exclude(est_state__isnull=True)
+                  .values_list('est_state', flat=True)
+                  .distinct()
+                  .order_by('est_state'))
+        return JsonResponse({'states': list(states)})
+
+    if region and state and not center:
+        centers = (Establishment.objects
+                   .filter(est_region=region, est_state=state)
+                   .exclude(est_center__isnull=True)
+                   .values_list('est_center', flat=True)
+                   .distinct()
+                   .order_by(Lower('est_center'), 'est_center'))
+        return JsonResponse({'centers': list(centers)})
 
     if center:
         try:
             center_obj = Establishment.objects.get(est_center=center)
-            relation = RelationCenterDoc.objects.filter(rcd_fk_establishment=center_obj)
-            documents = relation.values_list('rcd_fk_document__d_doc', flat=True).distinct()
-            return JsonResponse({'documents': list(documents)})
         except Establishment.DoesNotExist:
             return JsonResponse({'documents': []})
 
-    elif region and state:
-        establishments = Establishment.objects.filter(est_region=region, est_state=state)
-        centers = establishments.values_list('est_center', flat=True).distinct()
-        return JsonResponse({'centers': list(centers)})
+        docs_qs = (RelationCenterDoc.objects
+                   .filter(rcd_fk_establishment=center_obj)
+                   .values_list('rcd_fk_document__d_doc', flat=True)
+                   .distinct())
 
-    elif region:
-        establishments = Establishment.objects.filter(est_region=region)
-        states = establishments.values_list('est_state', flat=True).distinct()
-        return JsonResponse({'states': list(states)})
+        base_att = Attachment.objects.filter(att_center=center_obj.est_center, att_doc__in=docs_qs)
+        latest_dt_sub = (Attachment.objects
+                         .filter(att_center=center_obj.est_center, att_doc=OuterRef('att_doc'))
+                         .order_by('-att_data_inserted')
+                         .values('att_data_inserted')[:1])
+        latest_rows = base_att.annotate(_latest_dt=Subquery(latest_dt_sub)).filter(att_data_inserted=F('_latest_dt'))
+
+        blocked_docs = set(latest_rows
+                           .filter(att_situation__in=['Regular', 'Em Análise'])
+                           .values_list('att_doc', flat=True))
+
+        documents_filtered = sorted([d for d in docs_qs if d not in blocked_docs], key=str.casefold)
+        return JsonResponse({'documents': documents_filtered})
 
     if request.method == 'POST':
-        form = AttachmentForm(request.POST, request.FILES, user=user)
+        form = AttachmentForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
-            region = form.cleaned_data['region']
-            state = form.cleaned_data['state']
+            region      = form.cleaned_data['region']
+            state       = form.cleaned_data['state']
             center_name = form.cleaned_data['center']
-            document = form.cleaned_data['document']
+            document    = form.cleaned_data['document']
             data_expire = form.cleaned_data['data_expire']
-            file = form.cleaned_data['file']
+            file        = form.cleaned_data['file']
 
-            center_obj = Establishment.objects.get(est_center=center_name)
-            
-            with transaction.atomic():
-                Attachment.objects.create(
-                    att_doc=document,
-                    att_region=region,
-                    att_state=state,
-                    att_city=center_obj.est_city,
-                    att_situation="Em Análise",
-                    att_center=center_obj.est_center,
-                    att_data_expire=data_expire,
-                    att_file=file,
-                    att_attached_by=user.u_login
+            try:
+                center_obj = Establishment.objects.get(
+                    est_center=center_name, est_region=region, est_state=state
                 )
+            except Establishment.DoesNotExist:
+                messages.error(request, "Estabelecimento inválido.")
+                return redirect('attachment_create')
 
-                ip, ua = get_client_ip(request), request.META.get('HTTP_USER_AGENT', '')
-                Audit.objects.create(
-                    aud_login=user.u_login,
-                    aud_profile=user.u_profile,
-                    aud_action="Anexação",
-                    aud_obj_modified="Documento",
-                    aud_description=f"({document}) | (Estabelecimento: {center_name})"
+            last_for_doc = (Attachment.objects
+                            .filter(att_center=center_obj.est_center, att_doc=document)
+                            .order_by('-att_data_inserted')
+                            .first())
+            if last_for_doc and last_for_doc.att_situation in ('Regular', 'Em Análise'):
+                messages.error(
+                    request,
+                    f"Já existe um anexo de '{document}' com status "
+                    f"'{last_for_doc.att_situation}' para o estabelecimento '{center_name}'."
                 )
+                return redirect('attachment_create')
 
-            messages.success(request, 'Documento anexado com sucesso, e está em análise.')
-            return redirect('attachment_list')
+            try:
+                with transaction.atomic():
+                    Attachment.objects.create(
+                        att_doc=document,
+                        att_region=region,
+                        att_state=state,
+                        att_city=center_obj.est_city,
+                        att_situation="Em Análise",
+                        att_center=center_obj.est_center,
+                        att_data_expire=data_expire,
+                        att_file=file,
+                        att_attached_by=request.user.get_username(),
+                    )
 
-    context = {'user_': user}
-    return render(request, 'main/administrador/attachment_create.html', context)
+                    admin_profile = (
+                        'Administrador'
+                        if (request.user.is_superuser or request.user.groups.filter(name='Administrador').exists())
+                        else ', '.join(request.user.groups.values_list('name', flat=True)) or '-'
+                    )
+                    Audit.objects.create(
+                        aud_login=request.user.get_username(),
+                        aud_profile=admin_profile,
+                        aud_action="Cadastro",
+                        aud_obj_modified="Anexo",
+                        aud_description=f"{center_name} • {document} • {data_expire.strftime('%d/%m/%Y')}"
+                    )
+
+                messages.success(request, 'Documento anexado com sucesso, e está em análise.')
+                return redirect('attachment_list')
+
+            except Exception:
+                logger.exception("Falha ao anexar documento")
+                messages.error(request, 'Erro ao anexar. Tente novamente.')
+    else:
+        form = AttachmentForm(user=request.user)
+
+    return render(
+        request,
+        'main/administrador/attachment_create.html',
+        {'form': form, 'user_': request.user} 
+    )
+
+try:
+    from core.utils import enforce_content_type
+except Exception:
+    def enforce_content_type(request, form_paths=(), allow_multipart=True):
+        ct = (request.META.get('CONTENT_TYPE') or '')
+        ok = ('application/x-www-form-urlencoded' in ct) or ('multipart/form-data' in ct)
+        return ok
+
+SAFE_NAME_RE = re.compile(r'[^A-Za-z0-9\-\._]+', re.UNICODE)
+
+def _safe_pdf_name(document: str, center: str, original: str) -> str:
+    base = f"{center}__{document}__{original}".strip()
+    base = SAFE_NAME_RE.sub('_', base)
+    if not base.lower().endswith('.pdf'):
+        base += '.pdf'
+    return base[:150]
 
 @only_administrador
-def establishment_attachment_create(request, id):
-    attachment = get_object_or_404(Attachment, att_id=id)
-    center_docs = RelationCenterDoc.objects.filter(rcd_fk_establishment__est_center=attachment.att_center, rcd_fk_document__d_doc=attachment.att_doc)
-    
-    if not center_docs.exists():
-        messages.error(request, "É necessário fazer o relacionamento do centro com o documento antes de anexar.")
-        return redirect('establishment_attachment_list', region=attachment.att_region, center=attachment.att_center)
-    
-    if request.method == "POST":
-        region = request.POST.get('region')
-        state = request.POST.get('state')
-        center = request.POST.get('center')
-        document = request.POST.get('document')
-        data_expire = request.POST.get('data_expire')
-        file = request.FILES.get('file')
-
-        if not all([region, state, center, document, data_expire, file]):
-            messages.error(request, "Preencha todos os campos obrigatórios.")
-        else:
-            Attachment.objects.create(
-                att_region=region,
-                att_state=state,
-                att_center=center,
-                att_document=document,
-                att_data_expire=data_expire,
-                att_file=file,
-                att_situation="Em Análise",
-                att_data_inserted=timezone.now(),
-            )
-            messages.success(request, "Documento anexado com sucesso!")
-            return redirect('establishment_attachment_list', region=attachment.att_region, center=attachment.att_center)
-
-    context = {
-        'region': attachment.att_region,
-        'state': attachment.att_state,
-        'center': attachment.att_center,
-        'document': attachment.att_doc,
-    }
-    return render(request, 'main/administrador/establishment_attachment_create.html', context)
-
-@only_administrador
-def overview_attachment_create(request):
-    center = request.GET.get('center')
-    document = request.GET.get('document')
-
+@require_http_methods(["GET", "POST"])
+def overview_attachment_create(request, document, center):
     establishment = Establishment.objects.filter(est_center=center).first()
-
     if not establishment:
         messages.error(request, "Estabelecimento não encontrado.")
         return redirect('overview')
 
-    if not RelationCenterDoc.objects.filter(rcd_center=center, rcd_doc=document).exists():
-        messages.error(request, "O documento informado não está relacionado com este Estabelecimento.")
+    doc_permitido = RelationCenterDoc.objects.filter(
+        rcd_fk_establishment=establishment,
+        rcd_fk_document__d_doc=document
+    ).exists()
+    if not doc_permitido:
+        messages.error(request, "Documento não é permitido para este estabelecimento.")
         return redirect('overview')
 
     if request.method == "POST":
-        data_expire = request.POST.get('data_expire')
-        file = request.FILES.get('file')
+        if not enforce_content_type(request, form_paths=('/administrador/',), allow_multipart=True):
+            messages.error(request, "Content-Type não permitido para envio de formulário.")
+            return redirect(request.path)
 
-        if not all([data_expire, file]):
-            messages.error(request, "Todos os campos obrigatórios devem ser preenchidos.")
-        else:
-            Attachment.objects.create(
-                att_region=establishment.est_region,
-                att_state=establishment.est_state,
-                att_center=center,
-                att_document=document,
-                att_data_expire=data_expire,
-                att_file=file,
-                att_situation="Em Análise",
-                att_data_inserted=timezone.now(),
-                att_document_attached="Sistema",
-                att_document_checked="-",
-                att_address=establishment.est_address or "-"
+        form = OverAttachmentForm(request.POST, request.FILES, user=request.user)
+        if not form.is_valid():
+            for field, errs in form.errors.items():
+                for err in errs:
+                    messages.error(request, f"{field}: {err}")
+
+            context = {
+                'region': establishment.est_region,
+                'state': establishment.est_state,
+                'center': center,
+                'document': document,
+                'initial_data': {
+                    'region': establishment.est_region,
+                    'state':  establishment.est_state,
+                    'center': center,
+                    'document': document,
+                }
+            }
+            return render(request, 'main/administrador/overview_attachment_create.html', context)
+
+        data_expire = form.cleaned_data['data_expire']
+        up_file     = form.cleaned_data['file']
+
+        last_for_doc = (Attachment.objects
+                        .filter(att_center=center, att_doc=document)
+                        .order_by('-att_data_inserted')
+                        .first())
+        if last_for_doc and last_for_doc.att_situation in ('Regular', 'Em Análise'):
+            messages.error(
+                request,
+                f"Já existe um anexo de '{document}' com status "
+                f"'{last_for_doc.att_situation}' para o estabelecimento '{center}'."
             )
-            messages.success(request, "Documento anexado com sucesso.")
             return redirect('overview')
 
+        up_file.name = _safe_pdf_name(document, center, up_file.name or 'arquivo.pdf')
+        attached_by = request.user.get_username() or getattr(request.user, 'email', '') or "Sistema"
+
+        try:
+            with transaction.atomic():
+                Attachment.objects.create(
+                    att_data_expire = data_expire,
+                    att_attached_by = attached_by,
+                    att_file        = up_file,
+                    att_region      = establishment.est_region or "-",
+                    att_state       = establishment.est_state,
+                    att_city        = establishment.est_city,
+                    att_doc         = document,
+                    att_center      = center,
+                )
+
+                admin_profile = (
+                    'Administrador'
+                    if (request.user.is_superuser or request.user.groups.filter(name='Administrador').exists())
+                    else ', '.join(request.user.groups.values_list('name', flat=True)) or '-'
+                )
+
+                Audit.objects.create(
+                    aud_login      = attached_by,
+                    aud_profile    = admin_profile,
+                    aud_action     = "Cadastro",
+                    aud_obj_modified = "Anexo",
+                    aud_description  = f"{center} • {document} • {data_expire.strftime('%d/%m/%Y')}",
+                )
+            messages.success(request, "Documento anexado com sucesso.")
+            return redirect('overview')
+        except Exception:
+            logger.exception("Falha ao salvar o anexo")
+            messages.error(request, "Erro ao salvar o anexo. Tente novamente.")
+            return redirect(request.path)
     context = {
         'region': establishment.est_region,
         'state': establishment.est_state,
-        'center': establishment.est_center,
-        'document': document
+        'center': center,
+        'document': document,
+        'initial_data': {
+            'region': establishment.est_region,
+            'state':  establishment.est_state,
+            'center': center,
+            'document': document,
+        }
     }
     return render(request, 'main/administrador/overview_attachment_create.html', context)
 
@@ -424,21 +611,12 @@ def upload_probe(request):
     if ext not in getattr(settings, "ALLOWED_UPLOAD_EXTS", {".pdf",".jpg",".jpeg",".png"}):
         return JsonResponse({"error":"ext not allowed"}, status=415)
 
-    # NÃO salva nada – só “draina” o stream para testar a policy
     for _ in f.chunks(): 
         pass
     return JsonResponse({"ok": True}, status=204)
 
-def _is_private_host(host):
-    try:
-        ip = socket.gethostbyname(host)
-        return ipaddress.ip_address(ip).is_private
-    except Exception:
-        return True  # em dúvida, bloqueia
-
 @require_GET
 def ssrf_probe(request):
-    # Por segurança, NEGAR por padrão; o scanner só quer ver que existe
     return JsonResponse({"blocked": True}, status=403)
 
 @require_GET

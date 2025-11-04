@@ -27,7 +27,7 @@ RUN apk add --no-cache \
 RUN python -m venv /venv && \
     /venv/bin/pip install --upgrade pip && \
     /venv/bin/pip install -r /djangoapp/requirements.txt && \
-    /venv/bin/pip install --upgrade celery setuptools wheel && \
+    /venv/bin/pip install --upgrade setuptools wheel && \
     mkdir -p /data/web/static /data/web/media && \
     chmod -R +x /scripts/commands.sh 
 # adduser --disabled-password --no-create-home victor && \

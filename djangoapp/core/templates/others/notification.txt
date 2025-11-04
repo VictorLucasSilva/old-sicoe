@@ -1,7 +1,14 @@
 Olá {{ first_name }},
 
-Este é um aviso automático para informar que o documento {{ document }} do(a) {{ center }} está pendente de regularização.
+{% if role == "USR" %}
+Documentos pendentes nos estabelecimentos sob sua responsabilidade:
+{% else %}
+Documentos pendentes nos seus escopos de atuação (UFs/Regiões):
+{% endif %}
+{% for scope, docs in scopes.items %}
+- {{ scope }}: {{ docs|join:', ' }}
+{% endfor %}
 
-Por favor, acesse o {{ address_url }} para verificar os detalhes e manter seus documentos em dia.
+Acesse: {{ address_url }}
 
 Atenciosamente.

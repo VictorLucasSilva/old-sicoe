@@ -2,343 +2,295 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Estabelecimentos</title>
-    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <style>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel de Estabelecimentos</title>
 
-        .create-div-document {
-            background-color: #FFF;
-            transition: .4s;
-            cursor: pointer;
-            color: black;
-            height: 100%;
-            border-radius: .25rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            padding: 15px;
-            box-shadow: .2rem .2rem .3rem .1rem rgb(191, 191, 191);
-        }
+  <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
-        .create-div-document .table {
-            font-size: 0.875rem;
-            width: 100%;
-            table-layout: fixed;
-            text-align: center;
-        }
-
-        .create-div-document .table th,
-        .create-div-document .table td {
-            word-wrap: break-word;
-            vertical-align: middle;
-            font-size: 1rem;
-        }
-
-        .is-invalid { border-color: #dc3545; }
-        .is-valid { border-color: #00841fff; }
-        .text-danger { color: #dc3545; }
-        .text-success { color: #00841fff; }
-    </style>
+  <style>
+    .create-div-document { background:#FFF; transition:.4s; cursor:pointer; color:#000; height:100%;
+      border-radius:.25rem; display:flex; flex-direction:column; justify-content:flex-start; padding:15px;
+      box-shadow:.2rem .2rem .3rem .1rem rgb(191,191,191); }
+    .is-invalid { border-color:#dc3545; }
+    .is-valid { border-color:#00841fff; }
+    .text-danger { color:#dc3545; }
+    .text-success { color:#00841fff; }
+    .btn-confirm .spinner-border { margin-left:.5rem; }
+  </style>
 </head>
 <body>
-    <div class="wrapper">
-            <aside id="sidebar">
-                <div class="d-flex">
-                    <button class="toggle-btn" type="button">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <div class="sidebar-logo">
-                        <a href="{% url 'home' %}"></a>
-                    </div>
-                </div>
-                <ul class="sidebar-nav">
-                    <li class="sidebar-item">
-                        <a href="{% url 'home' %}" class="sidebar-link">
-                            <i class="bi bi-house"></i>
-                            <span><strong>Home</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{% url 'attachment_list' %}" class="sidebar-link">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <span><strong>Anexos</strong></span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#auth" aria-expanded="false" aria-controls="auth">
-                            <i class="bi bi-plus-square"></i>
-                            <span><strong>Cadastro</strong></span>
-                        </a>
-                        <ul id="auth" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'establishment_list' %}" class="sidebar-link"> Estabelecimento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'document_list' %}" class="sidebar-link"> Documento</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link collapsed" data-bs-toggle="collapse"
-                                    data-bs-target="#relation" aria-expanded="false" aria-controls="auth">
-                                     Relacionamento
-                                </a>
-                                <ul id="relation" class="sidebar-dropdown list-unstyled collapse">
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_doc_list' %}" class="sidebar-link">- Estab. e Documento</a>
-                                    </li>
-                                    <li class="sidebar-item">
-                                        <a href="{% url 'center_user_list' %}" class="sidebar-link">- Estab. e Usuário</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                            data-bs-target="#admin" aria-expanded="false" aria-controls="admin">
-                            <i class="bi bi-person-lock"></i>
-                            <span><strong>Administração</strong></span>
-                        </a>
-                        <ul id="admin" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="{% url 'user_list' %}" class="sidebar-link">Usuários</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'audit_list' %}" class="sidebar-link">Auditoria</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="{% url 'email_list' %}" class="sidebar-link">Email</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </aside>
-        <div class="main">
-            <nav class="navbar navbar-expand px-4 py-2">
-                <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
-                    <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2" />
-                    <h3 class="mx-3"><strong>Painel De Estabelecimento</strong></h3>
-                </a>
-            </nav>
-              <main class="content px-3 py-4">
-                {% if messages %}
-                  <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; width: fit-content; max-width: 90%;">
-                    {% for message in messages %}
-                      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                      </div>
-                    {% endfor %}
-                  </div>
-                {% endif %}
-                  <div class="container-fluid">
-                      <div class="mb-3">
-                          <div class="row">
-                              <div class="col-12 col-lg-12 col-md-12 pb-4 mt-2">
-                                  <div class="breadcrumb-div py-3 border-1">
-                                      <ol class="breadcrumb my-1 mx-2 px-3">
-                                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
-                                        <li class="breadcrumb-item"><a href="{% url 'establishment_list' %}">Estabelecimentos</a></li>
-                                        <li class="breadcrumb-item"><a href="{% url 'cnpj_list' %}">Unidades</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">Alteração de Unidades</li>
-                                      </ol>
-                                      <h1 class="fw-bold fs-2 mx-5 mt-3">Alteração - Unidades</h1>
-                                  </div>
-                              </div>
-                          </div>
-                          <div class="row">
-                            <div class="col-12 col-lg-12 col-md-12">
-                              <div class="create-div-document py-5 px-5 border-1">
-                                 <form method="POST" id="formCNPJUpdate">
-                                    {% csrf_token %}
+<div class="wrapper">
+  {% include "others/sidebar.html" %}
+  <div class="main">
+    <nav class="navbar navbar-expand px-4 py-2">
+      <a href="#" class="navbar-text-lg-start inline pt-2 d-flex align-items-center">
+        <img src="{% static 'images/BBTS.png' %}" alt="Logo" class="mx-3 mb-2"/>
+        <h3 class="mx-3"><strong>Sistema de Controle de Estabelecimento - SICOE</strong></h3>
+      </a>
+    </nav>
 
-                                    <div class="mb-4">
-                                        <label class="form-label mb-2"><strong>Estabelecimento</strong></label>
-                                        <input type="text" class="form-control" value="{{ cnpj_l.ndest_fk_establishment.est_center }}" readonly>
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="form-label mb-2"><strong>Tipo de Unidade</strong></label>
-                                        <input type="text" name="ndest_units" id="id_ndest_units"
-                                            value="{{ form.ndest_units.value|default:cnpj_l.ndest_units }}"
-                                            class="form-control {% if form.ndest_units.errors and form.is_bound %}is-invalid{% endif %}">
-                                        {% if form.ndest_units.errors and form.is_bound %}
-                                        <div id="ndest_units_error" class="text-danger small mt-1">
-                                            {% for error in form.ndest_units.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                        {% else %}
-                                        <div id="ndest_units_error" class="small mt-1"></div>
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="form-label mb-2"><strong>CNPJ</strong></label>
-                                        <input type="text" name="ndest_cnpj" id="id_ndest_cnpj"
-                                            value="{{ form.ndest_cnpj.value|default:cnpj_l.ndest_cnpj }}"
-                                            class="form-control {% if form.ndest_cnpj.errors and form.is_bound %}is-invalid{% endif %}">
-                                        {% if form.ndest_cnpj.errors and form.is_bound %}
-                                        <div id="ndest_cnpj_error" class="text-danger small mt-1">
-                                            {% for error in form.ndest_cnpj.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                        {% else %}
-                                        <div id="ndest_cnpj_error" class="small mt-1"></div>
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="form-label mb-2"><strong>NIRE</strong></label>
-                                        <input type="text" name="ndest_nire" id="id_ndest_nire"
-                                            value="{{ form.ndest_nire.value|default:cnpj_l.ndest_nire }}"
-                                            class="form-control {% if form.ndest_nire.errors and form.is_bound %}is-invalid{% endif %}">
-                                        {% if form.ndest_nire.errors and form.is_bound %}
-                                        <div id="ndest_nire_error" class="text-danger small mt-1">
-                                            {% for error in form.ndest_nire.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                        {% else %}
-                                        <div id="ndest_nire_error" class="small mt-1"></div>
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="form-label mb-2"><strong>Inscrição Estadual</strong></label>
-                                        <input type="text" name="ndest_reg_state" id="id_ndest_reg_state"
-                                            value="{{ form.ndest_reg_state.value|default:cnpj_l.ndest_reg_state }}"
-                                            class="form-control {% if form.ndest_reg_state.errors and form.is_bound %}is-invalid{% endif %}">
-                                        {% if form.ndest_reg_state.errors and form.is_bound %}
-                                        <div id="ndest_reg_state_error" class="text-danger small mt-1">
-                                            {% for error in form.ndest_reg_state.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                        {% else %}
-                                        <div id="ndest_reg_state_error" class="small mt-1"></div>
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="mb-5">
-                                        <label class="form-label mb-2"><strong>Inscrição Municipal</strong></label>
-                                        <input type="text" name="ndest_reg_city" id="id_ndest_reg_city"
-                                            value="{{ form.ndest_reg_city.value|default:cnpj_l.ndest_reg_city }}"
-                                            class="form-control {% if form.ndest_reg_city.errors and form.is_bound %}is-invalid{% endif %}">
-                                        {% if form.ndest_reg_city.errors and form.is_bound %}
-                                        <div id="ndest_reg_city_error" class="text-danger small mt-1">
-                                            {% for error in form.ndest_reg_city.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                        {% else %}
-                                        <div id="ndest_reg_city_error" class="small mt-1"></div>
-                                        {% endif %}
-                                    </div>
-
-                                    <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">Salvar</button>
-                                    <a href="{% url 'cnpj_list' %}" class="btn btn-secondary">Voltar</a>
-                                </form>
-                              </div>
-                            </div>
-                          </div>
-                      </div>
-                  </div>
-              </main>
-                <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Confirmar Alteração</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">Tem certeza que deseja salvar as alterações desta unidade?</div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="button" class="btn btn-danger" id="btnConfirmarSalvar">Confirmar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <footer class="footer d-flex justify-content-center align-items-center">
-                    <div class="container-fluid">
-                        <div class="row text-body-secondary align-items-center justify-content-center">
-                            <div class="col-6 text-center pt-2">
-                                <a class="text-body-secondary" href="#">
-                                    <p>&copy; 2025 BB Tecnologia e Serviços. Todos os direitos reservados.</p>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
-            </div>
+    <main class="content px-3 py-4">
+      {% if messages %}
+      <div id="msg-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index:1080; max-width:90%;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-            crossorigin="anonymous"></script>
-        <script src="{% static 'js/script.js' %}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                // Fechar mensagens automaticamente
-                const msgContainer = document.getElementById('msg-container');
-                if (msgContainer) {
-                    setTimeout(() => {
-                        msgContainer.querySelectorAll('.alert').forEach(alert => {
-                            bootstrap.Alert.getOrCreateInstance(alert).close();
-                        });
-                    }, 8000);
-                }
+        {% endfor %}
+      </div>
+      {% endif %}
 
-                const form = document.getElementById('formCNPJUpdate');
-                form.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') e.preventDefault();
-                });
+      <div class="container-fluid">
+        <div class="mb-3">
+          <div class="row">
+            <div class="col-12 pb-4 mt-2">
+              <div class="breadcrumb-div py-3 border-1">
+                <ol class="breadcrumb my-1 mx-2 px-3">
+                  <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
+                  <li class="breadcrumb-item"><a href="{% url 'establishment_list' %}">Estabelecimentos</a></li>
+                  <li class="breadcrumb-item"><a href="{% url 'cnpj_list' %}">Unidades</a></li>
+                  <li class="breadcrumb-item active" aria-current="page">Alteração de Unidades</li>
+                </ol>
+                <h1 class="fw-bold fs-2 mx-5 mt-3">Alteração - Unidades</h1>
+              </div>
+            </div>
+          </div>
 
-                const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
-                const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+          <div class="row">
+            <div class="col-12">
+              <div class="create-div-document py-4 px-4 border-1">
+                <div class="col-12">
+                  <div class="create-div-document py-5 px-5 border-1">
+                    <form method="POST" id="formCNPJUpdate" novalidate>
+                      {% csrf_token %}
 
-                btnAbrirModal.addEventListener('click', () => {
-                    new bootstrap.Modal(document.getElementById('modalConfirmarSalvar')).show();
-                });
+                      <div class="mb-4">
+                        <label class="form-label mb-2"><strong>Estabelecimento</strong></label>
+                        <input type="text" class="form-control" value="{{ cnpj_l.ndest_fk_establishment.est_center }}" readonly>
+                      </div>
 
-                btnConfirmarSalvar.addEventListener('click', () => {
-                    form.submit();
-                });
+                      <div class="mb-4">
+                        <label class="form-label mb-2"><strong>Tipo de Unidade</strong></label>
+                        <input type="text" name="ndest_units" id="id_ndest_units"
+                               value="{{ form.ndest_units.value|default:cnpj_l.ndest_units }}"
+                               class="form-control {% if form.ndest_units.errors and form.is_bound %}is-invalid{% endif %}">
+                        {% if form.ndest_units.errors and form.is_bound %}
+                          <div id="ndest_units_error" class="text-danger small mt-1">
+                            {% for error in form.ndest_units.errors %}{{ error }}{% endfor %}
+                          </div>
+                        {% else %}
+                          <div id="ndest_units_error" class="small mt-1"></div>
+                        {% endif %}
+                      </div>
 
-                // Validação dinâmica
-                function validateField(field, errorElement, messageEmpty) {
-                    let value = field.value.trim();
-                    if (!value) {
-                        errorElement.textContent = messageEmpty;
-                        errorElement.className = "text-danger small mt-1";
-                        field.classList.add('is-invalid');
-                        field.classList.remove('is-valid');
-                    } else {
-                        errorElement.textContent = "";
-                        errorElement.className = "text-success small mt-1";
-                        field.classList.remove('is-invalid');
-                        field.classList.add('is-valid');
-                    }
-                }
+                      <div class="mb-4">
+                        <label class="form-label mb-2"><strong>CNPJ</strong></label>
+                        <input type="text" name="ndest_cnpj" id="id_ndest_cnpj"
+                               value="{{ form.ndest_cnpj.value|default:cnpj_l.ndest_cnpj }}"
+                               inputmode="numeric" autocomplete="off" maxlength="18" placeholder="00.000.000/0000-00"
+                               class="form-control {% if form.ndest_cnpj.errors and form.is_bound %}is-invalid{% endif %}">
+                        {% if form.ndest_cnpj.errors and form.is_bound %}
+                          <div id="ndest_cnpj_error" class="text-danger small mt-1">
+                            {% for error in form.ndest_cnpj.errors %}{{ error }}{% endfor %}
+                          </div>
+                        {% else %}
+                          <div id="ndest_cnpj_error" class="small mt-1"></div>
+                        {% endif %}
+                      </div>
 
-                const fields = [
-                    {id: 'id_ndest_units', errorId: 'ndest_units_error', msg: "O campo Unidade é obrigatório."},
-                    {id: 'id_ndest_cnpj', errorId: 'ndest_cnpj_error', msg: "O campo CNPJ é obrigatório."},
-                    {id: 'id_ndest_nire', errorId: 'ndest_nire_error', msg: "O campo NIRE é obrigatório."},
-                    {id: 'id_ndest_reg_state', errorId: 'ndest_reg_state_error', msg: "O campo IE é obrigatório."},
-                    {id: 'id_ndest_reg_city', errorId: 'ndest_reg_city_error', msg: "O campo IM é obrigatório."}
-                ];
+                      <div class="mb-4">
+                        <label class="form-label mb-2"><strong>NIRE</strong></label>
+                        <input type="text" name="ndest_nire" id="id_ndest_nire"
+                               value="{{ form.ndest_nire.value|default:cnpj_l.ndest_nire }}"
+                               class="form-control {% if form.ndest_nire.errors and form.is_bound %}is-invalid{% endif %}">
+                        {% if form.ndest_nire.errors and form.is_bound %}
+                          <div id="ndest_nire_error" class="text-danger small mt-1">
+                            {% for error in form.ndest_nire.errors %}{{ error }}{% endfor %}
+                          </div>
+                        {% else %}
+                          <div id="ndest_nire_error" class="small mt-1"></div>
+                        {% endif %}
+                      </div>
 
-                fields.forEach(f => {
-                    const fieldEl = document.getElementById(f.id);
-                    const errorEl = document.getElementById(f.errorId);
-                    if (fieldEl) {
-                        fieldEl.addEventListener('input', function () {
-                            validateField(fieldEl, errorEl, f.msg);
-                        });
-                    }
-                });
-            });
-        </script>
-    </body>
+                      <div class="mb-4">
+                        <label class="form-label mb-2"><strong>Inscrição Estadual</strong></label>
+                        <input type="text" name="ndest_reg_state" id="id_ndest_reg_state"
+                               value="{{ form.ndest_reg_state.value|default:cnpj_l.ndest_reg_state }}"
+                               class="form-control {% if form.ndest_reg_state.errors and form.is_bound %}is-invalid{% endif %}">
+                        {% if form.ndest_reg_state.errors and form.is_bound %}
+                          <div id="ndest_reg_state_error" class="text-danger small mt-1">
+                            {% for error in form.ndest_reg_state.errors %}{{ error }}{% endfor %}
+                          </div>
+                        {% else %}
+                          <div id="ndest_reg_state_error" class="small mt-1"></div>
+                        {% endif %}
+                      </div>
+
+                      <div class="mb-5">
+                        <label class="form-label mb-2"><strong>Inscrição Municipal</strong></label>
+                        <input type="text" name="ndest_reg_city" id="id_ndest_reg_city"
+                               value="{{ form.ndest_reg_city.value|default:cnpj_l.ndest_reg_city }}"
+                               class="form-control {% if form.ndest_reg_city.errors and form.is_bound %}is-invalid{% endif %}">
+                        {% if form.ndest_reg_city.errors and form.is_bound %}
+                          <div id="ndest_reg_city_error" class="text-danger small mt-1">
+                            {% for error in form.ndest_reg_city.errors %}{{ error }}{% endfor %}
+                          </div>
+                        {% else %}
+                          <div id="ndest_reg_city_error" class="small mt-1"></div>
+                        {% endif %}
+                      </div>
+
+                      <button type="button" class="btn btn-primary" id="btnAbrirModalSalvar">
+                        Salvar
+                      </button>
+                      <a href="{% url 'cnpj_list' %}" class="btn btn-secondary">Voltar</a>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="modal fade" id="modalConfirmarSalvar" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirmar Alteração</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">Tem certeza que deseja salvar as alterações desta unidade?</div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary btn-confirm" id="btnConfirmarSalvar">
+              <span class="btn-text">Confirmar</span>
+              <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="{% static 'js/script.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const msgContainer = document.getElementById('msg-container');
+  if (msgContainer) {
+    setTimeout(() => {
+      msgContainer.querySelectorAll('.alert').forEach(alert => {
+        bootstrap.Alert.getOrCreateInstance(alert).close();
+      });
+    }, 8000);
+  }
+
+  const form = document.getElementById('formCNPJUpdate');
+  form.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+
+  const btnAbrirModal = document.getElementById('btnAbrirModalSalvar');
+  const btnConfirmarSalvar = document.getElementById('btnConfirmarSalvar');
+  const modal = new bootstrap.Modal(document.getElementById('modalConfirmarSalvar'));
+  const btnConfirmarText = btnConfirmarSalvar.querySelector('.btn-text');
+  let = locked = false;
+  btnAbrirModal.addEventListener('click', () => modal.show());
+  btnConfirmarSalvar.addEventListener('click', () => {
+    if (locked) return;
+      locked = true;
+    btnConfirmarSalvar.disabled = true;
+    btnConfirmarSalvar.querySelector('.spinner-border').classList.remove('d-none');
+    btnConfirmarText.textContent = '';
+    form.submit();
+  });
+
+  const cnpjInput = document.getElementById('id_ndest_cnpj');
+  const cnpjError = document.getElementById('ndest_cnpj_error');
+  if (!cnpjInput) return;
+
+  const onlyDigits = s => (s || '').replace(/\D/g, '');
+  function fmtCNPJ(d) {
+    d = onlyDigits(d).slice(0, 14);
+    if (d.length <= 2) return d;
+    if (d.length <= 5) return d.slice(0,2) + '.' + d.slice(2);
+    if (d.length <= 8) return d.slice(0,2) + '.' + d.slice(2,5) + '.' + d.slice(5);
+    if (d.length <= 12) return d.slice(0,2) + '.' + d.slice(2,5) + '.' + d.slice(5,8) + '/' + d.slice(8);
+    return d.slice(0,2) + '.' + d.slice(2,5) + '.' + d.slice(5,8) + '/' + d.slice(8,12) + '-' + d.slice(12,14);
+  }
+  function mapRawIdxToMasked(rawIdx) {
+    let off = 0;
+    if (rawIdx > 2)  off++;
+    if (rawIdx > 5)  off++;
+    if (rawIdx > 8)  off++;
+    if (rawIdx > 12) off++;
+    return rawIdx + off;
+  }
+  function validateCNPJ() {
+    const ok = onlyDigits(cnpjInput.value).length === 14;
+    if (ok) {
+      cnpjInput.classList.remove('is-invalid');
+      cnpjInput.classList.add('is-valid');
+      if (cnpjError) { cnpjError.textContent = ""; cnpjError.className = "small mt-1"; }
+    } else {
+      cnpjInput.classList.add('is-invalid');
+      cnpjInput.classList.remove('is-valid');
+      if (cnpjError) { cnpjError.textContent = "Informe um CNPJ válido (14 dígitos)."; cnpjError.className = "text-danger small mt-1"; }
+    }
+    return ok;
+  }
+  
+  function formatKeepingCaret(input) {
+    const val = input.value;
+    const caret = input.selectionStart ?? val.length;
+    const rawBefore = onlyDigits(val.slice(0, caret)).length;
+    const digits = onlyDigits(val).slice(0, 14);
+    const masked = fmtCNPJ(digits);
+    input.value = masked;
+    let newCaret = mapRawIdxToMasked(rawBefore);
+    if (newCaret > masked.length) newCaret = masked.length;
+    try { input.setSelectionRange(newCaret, newCaret); } catch(_) {}
+    validateCNPJ();
+  }
+
+  if (cnpjInput.value) cnpjInput.value = fmtCNPJ(cnpjInput.value);
+
+  cnpjInput.addEventListener('keydown', (ev) => {
+    const nav = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'];
+    const val = cnpjInput.value;
+    const pos = cnpjInput.selectionStart ?? 0;
+    if (ev.key === 'Backspace' && pos > 0 && /[.\-\/]/.test(val[pos-1])) {
+      ev.preventDefault(); cnpjInput.setSelectionRange(pos-1, pos-1); return;
+    }
+    if (ev.key === 'Delete' && /[.\-\/]/.test(val[pos])) {
+      ev.preventDefault(); cnpjInput.setSelectionRange(pos+1, pos+1); return;
+    }
+    if (nav.includes(ev.key)) return;
+    if (/^\d$/.test(ev.key)) return;
+    if (ev.ctrlKey || ev.metaKey) return;
+    ev.preventDefault();
+  });
+  cnpjInput.addEventListener('input', () => formatKeepingCaret(cnpjInput));
+  cnpjInput.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const txt = (e.clipboardData || window.clipboardData).getData('text') || '';
+    const digits = onlyDigits(txt).slice(0,14);
+    cnpjInput.value = fmtCNPJ(digits);
+    const end = cnpjInput.value.length;
+    try { cnpjInput.setSelectionRange(end, end); } catch(_) {}
+    validateCNPJ();
+  });
+  cnpjInput.addEventListener('blur', validateCNPJ);
+});
+</script>
+</body>
 </html>
-
